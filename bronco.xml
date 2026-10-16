@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<manifest>
+  <!-- Default remote (github, fetch="..") and default revision (refs/heads/lineage-24.0)
+       come from the Infinity X manifest, so only paths need overriding here. -->
+
+  <project name="LineageOS/android_device_motorola_bronco"
+           path="device/motorola/bronco" />
+  <project name="LineageOS/android_device_motorola_sm8475-common"
+           path="device/motorola/sm8475-common" />
+
+  <project name="LineageOS/android_kernel_motorola_sm8475"
+           path="kernel/motorola/sm8475" />
+  <project name="LineageOS/android_kernel_motorola_sm8475-modules"
+           path="kernel/motorola/sm8475-modules" />
+  <project name="LineageOS/android_kernel_motorola_sm8475-devicetrees"
+           path="kernel/motorola/sm8475-devicetrees" />
+
+  <project name="LineageOS/android_hardware_motorola"
+           path="hardware/motorola" />
+
+  <project name="TheMuppets/proprietary_vendor_motorola_bronco"
+           path="vendor/motorola/bronco" />
+  <project name="TheMuppets/proprietary_vendor_motorola_sm8475-common"
+           path="vendor/motorola/sm8475-common" />
+</manifest>

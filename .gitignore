@@ -1,0 +1,17 @@
+# Never commit these. Releases host the big stuff - see README.md.
+
+# Build outputs
+*.zip
+*.img
+*.tar
+*.tar.zst
+out/
+
+# The stock Motorola Camera payload (over git's 100 MiB limit anyway)
+motocamera/
+*.apk
+*.jar
+
+# Local noise
+*.log
+build.log
