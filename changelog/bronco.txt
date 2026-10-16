@@ -1,0 +1,32 @@
+Project Infinity X 4.1 (Android 17) for the Motorola ThinkPhone
+Build 2026-10-16  UNOFFICIAL
+
+Fixes in this build
+-------------------
+- Double-tap to wake works. The touch driver was never exposing the gesture nodes
+  the sensor HAL polls, and the gesture re-arm was gated on touch state that stays
+  stale while the panel is off.
+
+- The refresh rate no longer flickers. The panel shifts gamma on every rate change, so
+  both things that could change the rate underneath you are now held to the rate you
+  pick: the framework's adaptive zone voting, and the display HAL dropping to an idle
+  fps on its own.
+
+- Refresh rate is a single choice now - 60 / 90 / 120 / 144 Hz - instead of a
+  minimum/maximum range, so the framework only ever asks for one mode.
+
+- Always-On Display runs at 60 Hz instead of inheriting your awake rate. The
+  fingerprint sensor still overrides this while you unlock.
+
+- The stock Motorola Camera is back, alongside the LineageOS camera.
+
+- OTA updates are served from this project rather than upstream.
+
+Known issues
+------------
+- USB-C port role selection is unreliable.
+- "Show taps" can drop the refresh rate in developer options.
+
+Reporting a problem? Include the build date from Settings > About phone, and a logcat
+if you can. Dirty flashing over the previous Infinity X build works; if anything
+misbehaves, factory reset before reporting it.

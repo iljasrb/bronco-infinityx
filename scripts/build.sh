@@ -184,17 +184,26 @@ grep -q 'motocamera/motocamera.mk' "$bronco/infinity_bronco.mk" ||
 # `adb root` is unavailable (SetSafetyNetProps() forces ro.debuggable=0 every boot, for
 # Play Integrity), so there is no push-based iteration: every test costs build + flash.
 
-# --- OTA feed ----------------------------------------------------------------
-# Compiled into the ROM, so it cannot change without a rebuild *and a reflash*: it must
-# point somewhere permanent. GitHub raw is free and stable. The ~1.8 GB downloads are
-# named inside that JSON and can be moved to any mirror without touching this URL.
-# blocked_update_info_url is left alone: it is a LineageOS wiki help link, not a feed.
-feed="https://raw.githubusercontent.com/iljasrb/bronco-infinityx/main/bronco.json"
+# --- OTA feed and changelog --------------------------------------------------
+# Both URLs are compiled into the ROM, so they cannot change without a rebuild *and a
+# reflash*: they must point somewhere permanent. GitHub raw is free and stable. The
+# ~1.8 GB downloads are named inside the feed JSON and can be moved to any mirror
+# without touching these. blocked_update_info_url is left alone: it is a LineageOS
+# wiki help link, not a feed.
 updater="packages/apps/Updater/app/src/main/res/values/strings.xml"
+base="https://raw.githubusercontent.com/iljasrb/bronco-infinityx/main"
+feed="$base/bronco.json"
 sed -i "s|https://raw.githubusercontent.com/ProjectInfinity-X/official_devices/17/vanilla/{device}.json|$feed|" \
     "$updater"
 grep -q "name=\"updater_server_url\" translatable=\"false\">$feed<" "$updater" || {
     echo "OTA feed retarget did not apply: strings.xml anchor moved upstream" >&2; exit 1; }
+
+# The "Show changelog" link points into the same upstream tree. Swap the path prefix
+# only, leaving the xliff device substitution (%1$s -> changelog/<device>.txt) intact.
+sed -i "s|https://raw.githubusercontent.com/ProjectInfinity-X/official_devices/17/changelog/|$base/changelog/|" \
+    "$updater"
+grep -q "$base/changelog/" "$updater" || {
+    echo "changelog retarget did not apply: strings.xml anchor moved upstream" >&2; exit 1; }
 
 # --- self-check: fail loudly if a future sync changes the upstream shape -----
 [[ -f $bronco/infinity_bronco.mk ]] || { echo "no infinity_bronco.mk" >&2; exit 1; }
