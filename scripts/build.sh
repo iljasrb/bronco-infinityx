@@ -183,6 +183,9 @@ dimens="$bronco/resource-overlay/device/SystemUI/res/values/dimens.xml"
 sed -i 's|<dimen name="status_bar_padding_start">8dp</dimen>|<dimen name="status_bar_padding_start">30dp</dimen>|' "$dimens"
 grep -q '<dimen name="status_bar_padding_start">30dp</dimen>' "$dimens" || {
     echo "status bar padding did not apply: dimens.xml anchor moved upstream" >&2; exit 1; }
+# '--' is illegal inside an XML comment; aapt2 would only say so much later.
+python3 -c "import xml.dom.minidom;xml.dom.minidom.parse('$dimens')" 2>/dev/null || {
+    echo "status bar dimens.xml is malformed: likely '--' inside an XML comment" >&2; exit 1; }
 
 # --- stock Motorola camera ---------------------------------------------------
 # MotCamera4 + MotCamera3AI, their shared libraries and the hidden-API whitelist.
