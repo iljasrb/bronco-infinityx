@@ -1,0 +1,98 @@
+diff --git a/AndroidProducts.mk b/AndroidProducts.mk
+index 2b513ea..6f7a317 100644
+--- a/AndroidProducts.mk
++++ b/AndroidProducts.mk
+@@ -15,4 +15,4 @@
+ #
+ 
+ PRODUCT_MAKEFILES := \
+-    $(LOCAL_DIR)/lineage_bronco.mk
++    $(LOCAL_DIR)/infinity_bronco.mk
+diff --git a/lineage_bronco.mk b/infinity_bronco.mk
+similarity index 77%
+rename from lineage_bronco.mk
+rename to infinity_bronco.mk
+index f5a39ec..d64707d 100644
+--- a/lineage_bronco.mk
++++ b/infinity_bronco.mk
+@@ -22,10 +22,16 @@ $(call inherit-product, $(SRC_TARGET_DIR)/product/full_base_telephony.mk)
+ # Inherit from bronco device
+ $(call inherit-product, device/motorola/bronco/device.mk)
+ 
++# Stock Motorola camera prebuilt (see motocamera/motocamera.mk)
++$(call inherit-product, device/motorola/bronco/motocamera/motocamera.mk)
++
+ # Inherit some common Lineage stuff.
+-$(call inherit-product, vendor/lineage/config/common_full_phone.mk)
++$(call inherit-product, vendor/infinity/config/common_full_phone.mk)
++
++# Debuggable builds are not possible on this ROM, so there is no push-based
++# iteration loop: see the note in scripts/build.sh and the section in ISSUES.md.
+ 
+-PRODUCT_NAME := lineage_bronco
++PRODUCT_NAME := infinity_bronco
+ PRODUCT_DEVICE := bronco
+ PRODUCT_MANUFACTURER := motorola
+ PRODUCT_BRAND := motorola
+diff --git a/resource-overlay/device/Frameworks/res/values/config.xml b/resource-overlay/device/Frameworks/res/values/config.xml
+index 6f18a5d..42781f9 100644
+--- a/resource-overlay/device/Frameworks/res/values/config.xml
++++ b/resource-overlay/device/Frameworks/res/values/config.xml
+@@ -172,7 +172,8 @@
+ 
+     <!-- If true, the doze component is not started until after the screen has been
+          turned off and the screen off animation has been performed. -->
+-    <bool name="config_dozeAfterScreenOffByDefault">true</bool>
++    <!-- Start doze before screen-off so the touch IC is still up to arm gestures. -->
++    <bool name="config_dozeAfterScreenOffByDefault">false</bool>
+ 
+     <!-- Type of the double tap sensor. Empty if double tap is not supported. -->
+     <string name="config_dozeDoubleTapSensorType" translatable="false">org.lineageos.sensor.double_tap</string>
+@@ -284,14 +285,12 @@
+          the brightness value is negative, only the lux threshold is applied. -->
+     <!-- Low zone brightness thresholds in the range [0, 255] -->
+     <integer-array name="config_brightnessThresholdsOfPeakRefreshRate">
+-        <item>77</item>
+-        <item>62</item>
++        <item>255</item>
+     </integer-array>
+ 
+     <!-- Low zone lux thresholds -->
+     <integer-array name="config_ambientThresholdsOfPeakRefreshRate">
+-        <item>70</item>
+-        <item>-1</item>
++        <item>100000</item>
+     </integer-array>
+ 
+     <!-- List of biometric sensors on the device, in decreasing strength. Consumed by AuthService
+@@ -311,4 +310,5 @@
+ 
+     <!-- Whether to enable fp unlock when screen turns off on udfps devices -->
+     <bool name="config_screen_off_udfps_enabled">true</bool>
++    <integer name="config_defaultRefreshRateInZone">144</integer>
+ </resources>
+diff --git a/resource-overlay/device/SystemUI/res/values/dimens.xml b/resource-overlay/device/SystemUI/res/values/dimens.xml
+index 667c4ca..21b7b17 100644
+--- a/resource-overlay/device/SystemUI/res/values/dimens.xml
++++ b/resource-overlay/device/SystemUI/res/values/dimens.xml
+@@ -4,8 +4,18 @@
+      SPDX-License-Identifier: Apache-2.0
+ -->
+ <resources>
+-    <!-- the padding on the start of the statusbar -->
+-    <dimen name="status_bar_padding_start">8dp</dimen>
++    <!-- Motorola ships 8dp; the end side reserves 75px for the corner. -->
++    <dimen name="status_bar_padding_start">30dp</dimen>
++
++    <!-- QS clock and tiles on the same inset as the status bar. -->
++    <dimen name="qs_horizontal_margin">@dimen/status_bar_padding_start</dimen>
++
++    <!-- Matches the QS header and lockscreen line (3.6dp x 2.5 = 9px). -->
++    <dimen name="status_bar_padding_top">3.6dp</dimen>
++
++    <!-- Right edge: match the QS header so the battery sits at the same x. -->
++    <dimen name="ongoing_appops_dot_min_padding">16dp</dimen>
++    <dimen name="status_bar_padding_end">0dp</dimen>
+ 
+     <!-- Height of the status bar header bar when on Keyguard -->
+     <dimen name="status_bar_header_height_keyguard">@*android:dimen/status_bar_height</dimen>

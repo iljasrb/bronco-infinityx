@@ -1,0 +1,41 @@
+diff --git a/BoardConfigCommon.mk b/BoardConfigCommon.mk
+index cdc91c5..315b695 100644
+--- a/BoardConfigCommon.mk
++++ b/BoardConfigCommon.mk
+@@ -101,6 +101,9 @@ BOARD_VENDOR_RAMDISK_KERNEL_MODULES_BLOCKLIST_FILE := $(BOARD_VENDOR_KERNEL_MODU
+ BOARD_VENDOR_RAMDISK_RECOVERY_KERNEL_MODULES_LOAD := $(strip $(shell cat $(COMMON_PATH)/modules.load.recovery))
+ BOOT_KERNEL_MODULES := $(BOARD_VENDOR_RAMDISK_RECOVERY_KERNEL_MODULES_LOAD)
+ 
++# Exports the double_tap/udfps sysfs nodes the LineageOS sensors sub-HAL polls.
++BOARD_USES_DOUBLE_TAP_CTRL := true
++
+ TARGET_KERNEL_EXT_MODULES := \
+     qcom/opensource/mmrm-driver \
+     qcom/opensource/audio-kernel \
+@@ -156,7 +159,7 @@ TARGET_KERNEL_EXT_MODULES += \
+ BOARD_USES_METADATA_PARTITION := true
+ 
+ # Partitions
+--include vendor/lineage/config/BoardConfigReservedSize.mk
++-include vendor/infinity/config/BoardConfigReservedSize.mk
+ BOARD_BOOTIMAGE_PARTITION_SIZE := 100663296
+ BOARD_DTBOIMG_PARTITION_SIZE := 25165824
+ BOARD_RECOVERYIMAGE_PARTITION_SIZE := 104857600
+diff --git a/vendor.prop b/vendor.prop
+index 144717a..c4285a2 100644
+--- a/vendor.prop
++++ b/vendor.prop
+@@ -167,6 +167,7 @@ vendor.display.enable_async_powermode=1
+ vendor.display.enable_async_vds_creation=1
+ vendor.display.enable_display_extensions=1
+ vendor.display.enable_dpps_dynamic_fps=1
++# HAL-side dynamic fps off; the framework side is pinned in the overlay.
+ vendor.display.enable_early_wakeup=1
+ vendor.display.enable_hdr10_gpu_target=1
+ vendor.display.enable_optimize_refresh=0
+@@ -321,3 +322,5 @@ wifi.aware.interface=wifi-aware0
+ 
+ # ZRAM
+ ro.vendor.zram.swapon=true
++
++vendor.display.disable_dynamic_fps=1

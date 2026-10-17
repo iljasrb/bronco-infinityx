@@ -1,0 +1,30 @@
+# Drop in ~/.config/containers/systemd/, adjust the two paths, then:
+#   systemctl --user daemon-reload && systemctl --user start infinity-build
+#
+# The container is long-running; builds run via:
+#   podman exec infinity-build /work/scripts/build.sh
+
+[Unit]
+Description=Infinity X bronco build container
+
+[Container]
+ContainerName=infinity-build
+Image=localhost/bronco-rom-base:rom17
+
+# project tree (contains scripts/build.sh, patches/, .repo/)
+Volume=/home/user/Projects/bronco-lineage-experiments:/work
+
+# ccache volume, survives rebuilds
+Volume=infinity-ccache:/ccache
+
+Environment=CCACHE_DIR=/ccache
+Environment=HOME=/work/.home
+WorkingDir=/work
+
+Exec=sleep infinity
+
+[Service]
+Restart=on-failure
+
+[Install]
+WantedBy=default.target

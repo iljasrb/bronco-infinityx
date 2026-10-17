@@ -1,0 +1,15 @@
+diff --git a/motorola/drivers/input/touchscreen/touchscreen_mmi/touchscreen_mmi_notif.c b/motorola/drivers/input/touchscreen/touchscreen_mmi/touchscreen_mmi_notif.c
+index 7ae1446..9dba87a 100644
+--- a/motorola/drivers/input/touchscreen/touchscreen_mmi/touchscreen_mmi_notif.c
++++ b/motorola/drivers/input/touchscreen/touchscreen_mmi/touchscreen_mmi_notif.c
+@@ -454,7 +454,9 @@ static void ts_mmi_worker_func(struct work_struct *w)
+ 				break;
+ 
+ 		case TS_MMI_SET_GESTURES:
+-			if (touch_cdev->touch_powered)
++			/* touch_powered stays set while the panel is off, so the re-arm
++			 * was skipped and gestures never got armed. Use panel state. */
++			if (IS_ACTIVE_MODE)
+ 				break;
+ 
+ 			ts_mmi_queued_power_on(touch_cdev);
