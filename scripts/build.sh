@@ -174,6 +174,16 @@ grep -q 'setRefreshRate(refreshRate, refreshRate)' \
 python3 -c 'import xml.dom.minidom;xml.dom.minidom.parse("packages/apps/Settings/res/xml/screen_refresh_rate.xml")' 2>/dev/null || {
     echo "refresh-rate picker XML is malformed: rejecting it now, before the build spends 25 minutes" >&2; exit 1; }
 
+# --- status bar padding ------------------------------------------------------
+# Motorola's overlay pins the status bar start padding at 8dp, from before AOSP started
+# reserving the end side for the rounded corner. The end side now sits 75px in while the
+# start sits 8dp in, shifting the whole bar ~20dp left. 30dp = 75px at 400dpi. Only the
+# portrait values file is patched; values-land keeps Motorola's 8dp.
+dimens="$bronco/resource-overlay/device/SystemUI/res/values/dimens.xml"
+sed -i 's|<dimen name="status_bar_padding_start">8dp</dimen>|<dimen name="status_bar_padding_start">30dp</dimen>|' "$dimens"
+grep -q '<dimen name="status_bar_padding_start">30dp</dimen>' "$dimens" || {
+    echo "status bar padding did not apply: dimens.xml anchor moved upstream" >&2; exit 1; }
+
 # --- stock Motorola camera ---------------------------------------------------
 # MotCamera4 + MotCamera3AI, their shared libraries and the hidden-API whitelist.
 # TheMuppets' vendor tree ships none of it.
