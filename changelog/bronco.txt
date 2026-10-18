@@ -1,26 +1,11 @@
 Project Infinity X 4.1 (Android 17) for the Motorola ThinkPhone
 Build 2026-10-18  UNOFFICIAL
 
-Fixes in this build
--------------------
-- The camera/microphone privacy dot no longer sits on top of the battery, and
-  the status bar is symmetric: the battery's gap on the right mirrors the
-  clock's gap on the left.
-
-- Quick settings and the shade header line up with the status bar inset in
-  every orientation and on every screen size; the value is derived from the
-  status bar inset instead of being a second number kept in sync by hand.
-
+- Privacy dot no longer overlaps the battery; the status bar gaps mirror each other.
+- Quick settings and the shade header follow the status bar inset on any screen size.
 - Keyguard carrier text is no longer inset twice.
-
-Everything from the 2026-10-17 build is included: double-tap to wake,
-flicker-free refresh rate, a single refresh-rate choice, AOD at 60 Hz, the
-stock Motorola camera, and updates served from this project.
-
-Known issues
-------------
-- USB-C port role selection is unreliable.
-
-Report problems with the build date from Settings > About phone and a logcat.
-Dirty flashing over the previous build works; factory reset before reporting
-if anything misbehaves.
+- Fixed double-tap to wake.
+- Fixed screen flickering.
+- Single refresh-rate choice (60/90/120/144 Hz).
+- AOD forced to 60 Hz.
+- Stock Motorola camera included.
