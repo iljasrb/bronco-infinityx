@@ -3,12 +3,12 @@
 #
 #   scripts/publish.sh --dry-run              # default: print, change nothing
 #   scripts/publish.sh                        # latest/ replaced, previous kept in archive/
-#   scripts/publish.sh --purge                # delete every old rom on the VPS first
+#   scripts/publish.sh --purge                # drop the old builds, keep only the new one
 #   scripts/publish.sh --purge --no-push      # ... without touching the git feed
 #
-# Uploads the OTA zip, additional_images-<tag>.zip, recovery.img and the checksum
-# files, rewrites bronco.json (the URL the in-ROM Updater reads), commits and pushes
-# bronco.json + changelog/bronco.txt to GitHub.
+# The upload always goes to a staging directory first. Only after every file is on the
+# server and its size checked does the script touch latest/ (and archive/), so a failed
+# or interrupted upload leaves the published build intact.
 #
 # Remote detail: caddy serves /home/rocky/podman/caddy/site as rom.flac.moe, and the
 # login shell there is fish — everything remote goes through `bash -lc`.
@@ -17,6 +17,7 @@ infra=$(cd "$(dirname "$0")/.." && pwd)
 prod=$(dirname "$infra")/out/target/product/bronco
 host=mc
 site=/home/rocky/podman/caddy/site/bronco
+stage=$site/_staging
 baseurl=https://rom.flac.moe/bronco
 
 dry=1 purge=0 push=1
@@ -34,7 +35,7 @@ run() {  # echo, or execute when not dry
     if [ "$dry" = 1 ]; then printf '  would: %s\n' "$*"; else "$@"; fi
 }
 rsh() {  # remote command; the login shell there is fish, so wrap in bash -lc
-    if [ "$dry" = 1 ]; then printf '  would: ssh %s bash -lc %s\n' "$host" "$*"; else ssh "$host" bash -lc "$*"; fi
+    if [ "$dry" = 1 ]; then printf '  would: ssh %s bash -lc %s\n' "$host" "$*"; else ssh "$host" "bash -lc \"$*\""; fi
 }
 
 zip=$(ls -t "$prod"/Project_Infinity-X-*-VANILLA-UNOFFICIAL.zip 2>/dev/null | head -1)
@@ -57,30 +58,50 @@ tmp=$(mktemp -d); trap 'rm -rf "$tmp"' EXIT
 ( cd "$prod" && md5sum "$name" "additional_images-$tag.zip" recovery.img > "$tmp/MD5SUMS" )
 ( cd "$prod" && sha256sum "$name" "additional_images-$tag.zip" recovery.img > "$tmp/SHA256SUMS" )
 
+echo "1/4 upload -> $stage/"
+rsh "mkdir -p $stage"
+rsync_opts=(-ah --partial)
+[ -t 1 ] && rsync_opts+=(--info=progress2)   # progress spam only on a terminal
+run rsync "${rsync_opts[@]}" \
+    "$zip" "$imgs" "$rec" "$tmp/MD5SUMS" "$tmp/SHA256SUMS" "$host:$stage/"
+
+echo "2/4 verify what landed"
+for f in "$(basename "$zip")" "additional_images-$tag.zip" recovery.img; do
+    local_size=$(stat -c %s "$prod/$f")
+    if [ "$dry" = 1 ]; then
+        printf '  would: check %s is %s bytes on the server\n' "$f" "$local_size"
+        continue
+    fi
+    remote_size=$(ssh "$host" "bash -lc \"stat -c %s $stage/$f\"" 2>/dev/null || echo 0)
+    [ "$remote_size" = "$local_size" ] ||
+        { echo "upload incomplete: $f is $remote_size of $local_size bytes; latest/ untouched" >&2; exit 1; }
+    echo "  ok $f ($local_size bytes)"
+done
+
+echo "3/4 swap into place$( [ "$purge" = 1 ] && echo ' (purge: old builds deleted)')"
 if [ "$purge" = 1 ]; then
-    echo "remote: deleting every old rom"
-    rsh "rm -rf $site"
+    rsh "rm -rf $site/archive $site/latest && mv $stage $site/latest"
 else
-    echo "remote: latest/ -> archive/$tag/"
-    rsh "mkdir -p $site/archive/$tag && mv $site/latest/* $site/archive/$tag/ 2>/dev/null || true"
+    rsh "mkdir -p $site/archive && rm -rf $site/archive/$tag &&
+         { [ -d $site/latest ] && mv $site/latest $site/archive/$tag || true; } &&
+         mv $stage $site/latest"
 fi
-rsh "mkdir -p $site/latest"
 
-run rsync -ah --info=progress2 \
-    "$zip" "$imgs" "$rec" "$tmp/MD5SUMS" "$tmp/SHA256SUMS" "$host:$site/latest/"
-
+echo "4/4 verify the served file"
 url=$baseurl/latest/$name
 if [ "$dry" = 0 ]; then
     got=$(curl -sIL "$url" | awk 'tolower($1)=="content-length:"{v=$2} END{print v+0}')
     [ "$got" = "$size" ] || { echo "verify FAILED: $url serves $got bytes, want $size" >&2; exit 1; }
-    echo "verified: $url ($got bytes)"
+    echo "  verified: $url ($got bytes)"
 else
     echo "  would: curl -sIL $url"
 fi
 
 # OTA feed: the Updater app reads this from raw.githubusercontent.com
-if [ "$dry" = 1 ]; then echo "  would: rewrite bronco.json for $name"; fi
-[ "$dry" = 1 ] || python3 - "$infra/bronco.json" "$name" "$url" "$size" "$md5" <<'PY'
+if [ "$dry" = 1 ]; then
+    echo "  would: rewrite bronco.json for $name"
+else
+    python3 - "$infra/bronco.json" "$name" "$url" "$size" "$md5" <<'PY'
 import json, sys, time
 feed, name, url, size, md5 = sys.argv[1:6]
 json.dump({"response": [{"filename": name, "download": url, "size": int(size),
@@ -88,6 +109,7 @@ json.dump({"response": [{"filename": name, "download": url, "size": int(size),
           open(feed, "w"), indent=2)
 open(feed, "a").write("\n")
 PY
+fi
 
 iso=$(awk -F. '{print $3"-"$2"-"$1}' <<<"$tag")   # changelog uses yyyy-mm-dd
 if grep -qE "$tag|$iso" "$infra/changelog/bronco.txt"; then
