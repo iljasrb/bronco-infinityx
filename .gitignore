@@ -18,5 +18,8 @@ out/
 # The stock Motorola Camera payload (over git's 100 MiB limit anyway)
 motocamera/
 
+# Local-only publishing target (server host + path) — this repo is public
+.env.publish
+
 # Logs
 *.log

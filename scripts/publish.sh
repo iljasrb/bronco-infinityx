@@ -10,15 +10,26 @@
 # server and its size checked does the script touch latest/ (and archive/), so a failed
 # or interrupted upload leaves the published build intact.
 #
-# Remote detail: caddy serves /home/rocky/podman/caddy/site as rom.flac.moe, and the
-# login shell there is fish — everything remote goes through `bash -lc`.
+# Server details are not in this file: this repo is public. They come from
+# infinity/.env.publish (gitignored) or the environment:
+#   PUBLISH_HOST  ssh alias/host           (required)
+#   PUBLISH_ROOT  directory served below the base url (required)
+#   PUBLISH_URL   public base url          (default https://rom.flac.moe/bronco)
+# The remote login shell there is fish, so everything remote goes through `bash -lc`.
 set -eu
 infra=$(cd "$(dirname "$0")/.." && pwd)
 prod=$(dirname "$infra")/out/target/product/bronco
-host=mc
-site=/home/rocky/podman/caddy/site/bronco
+# .env.publish fills only what the environment did not already set, so an explicit
+# PUBLISH_ROOT=... on the command line wins over the file.
+if [ -f "$infra/.env.publish" ]; then
+    while IFS='=' read -r k v; do
+        case $k in PUBLISH_*) [ -n "${!k:-}" ] || export "$k=$v" ;; esac
+    done < <(grep -v '^#' "$infra/.env.publish")
+fi
+host=${PUBLISH_HOST:?publish: set PUBLISH_HOST (see infinity/.env.publish)}
+site=${PUBLISH_ROOT:?publish: set PUBLISH_ROOT (see infinity/.env.publish)}
+baseurl=${PUBLISH_URL:-https://rom.flac.moe/bronco}
 stage=$site/_staging
-baseurl=https://rom.flac.moe/bronco
 
 dry=1 purge=0 push=1
 for a in "$@"; do
