@@ -72,26 +72,24 @@ index 6f18a5d..42781f9 100644
 +    <integer name="config_defaultRefreshRateInZone">144</integer>
  </resources>
 diff --git a/resource-overlay/device/SystemUI/res/values/dimens.xml b/resource-overlay/device/SystemUI/res/values/dimens.xml
-index 667c4ca..21b7b17 100644
+index 667c4ca..8ef9474 100644
 --- a/resource-overlay/device/SystemUI/res/values/dimens.xml
 +++ b/resource-overlay/device/SystemUI/res/values/dimens.xml
-@@ -4,8 +4,18 @@
+@@ -4,8 +4,16 @@
       SPDX-License-Identifier: Apache-2.0
  -->
  <resources>
 -    <!-- the padding on the start of the statusbar -->
 -    <dimen name="status_bar_padding_start">8dp</dimen>
-+    <!-- Motorola ships 8dp; the end side reserves 75px for the corner. -->
++    <!-- Motorola/LineageOS ship 8dp; 30dp = 75px puts the status bar clock on the same x as the
++         QS clock, and the end side reserves the same corner room. -->
 +    <dimen name="status_bar_padding_start">30dp</dimen>
 +
-+    <!-- QS clock and tiles on the same inset as the status bar. -->
-+    <dimen name="qs_horizontal_margin">@dimen/status_bar_padding_start</dimen>
++    <!-- 5.6dp = 14px: the value the shipped bronco build measured best against the QS header. -->
++    <dimen name="status_bar_padding_top">5.6dp</dimen>
 +
-+    <!-- Matches the QS header and lockscreen line (3.6dp x 2.5 = 9px). -->
-+    <dimen name="status_bar_padding_top">3.6dp</dimen>
-+
-+    <!-- Right edge: match the QS header so the battery sits at the same x. -->
-+    <dimen name="ongoing_appops_dot_min_padding">16dp</dimen>
++    <!-- Right edge: match the QS header so the battery sits at the same x as the last QS tile. -->
++    <dimen name="ongoing_appops_dot_min_padding">14dp</dimen>
 +    <dimen name="status_bar_padding_end">0dp</dimen>
  
      <!-- Height of the status bar header bar when on Keyguard -->

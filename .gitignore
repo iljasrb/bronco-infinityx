@@ -1,17 +1,22 @@
-# Never commit these. Releases host the big stuff - see README.md.
+# Never commit these. Releases host the big stuff.
+
+# Local-only documentation, stock payload, staged artifacts
+docs/
+stock/
+gapps/
+release/
 
 # Build outputs
+out/
 *.zip
 *.img
 *.tar
 *.tar.zst
-out/
-
-# The stock Motorola Camera payload (over git's 100 MiB limit anyway)
-motocamera/
 *.apk
 *.jar
 
-# Local noise
+# The stock Motorola Camera payload (over git's 100 MiB limit anyway)
+motocamera/
+
+# Logs
 *.log
-build.log

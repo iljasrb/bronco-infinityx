@@ -1,5 +1,5 @@
 diff --git a/packages/SystemUI/res/layout/keyguard_status_bar.xml b/packages/SystemUI/res/layout/keyguard_status_bar.xml
-index 1942a70b3..d6e568f8a 100644
+index 1942a70b3..de768c1a5 100644
 --- a/packages/SystemUI/res/layout/keyguard_status_bar.xml
 +++ b/packages/SystemUI/res/layout/keyguard_status_bar.xml
 @@ -30,7 +30,7 @@
@@ -18,7 +18,7 @@ index 1942a70b3..d6e568f8a 100644
 -        android:paddingTop="@dimen/status_bar_padding_top"
 -        android:paddingStart="@dimen/status_bar_padding_start"
 +        android:paddingTop="0dp"
-+        android:paddingStart="@dimen/keyguard_carrier_text_start_padding"
++        android:paddingStart="0dp"
          android:layout_toStartOf="@id/system_icons_container"
          android:gravity="center_vertical"
 -        android:ellipsize="marquee"
@@ -26,24 +26,50 @@ index 1942a70b3..d6e568f8a 100644
          android:textDirection="locale"
          android:textAppearance="@style/TextAppearance.StatusBar.Default"
          android:textColor="?attr/wallpaperTextColorSecondary"
+diff --git a/packages/SystemUI/res/values-sw600dp-land/dimens.xml b/packages/SystemUI/res/values-sw600dp-land/dimens.xml
+index 4cd2fab11..3e8a675e6 100644
+--- a/packages/SystemUI/res/values-sw600dp-land/dimens.xml
++++ b/packages/SystemUI/res/values-sw600dp-land/dimens.xml
+@@ -28,7 +28,6 @@
+     <dimen name="qs_panel_padding_top">16dp</dimen>
+     <dimen name="qs_panel_padding">24dp</dimen>
+     <dimen name="qs_content_horizontal_padding">24dp</dimen>
+-    <dimen name="qs_horizontal_margin">24dp</dimen>
+ 
+     <dimen name="qs_media_session_height_expanded">172dp</dimen>
+ 
+diff --git a/packages/SystemUI/res/values-sw720dp-land/dimens.xml b/packages/SystemUI/res/values-sw720dp-land/dimens.xml
+index 0f482b19e..9172a8411 100644
+--- a/packages/SystemUI/res/values-sw720dp-land/dimens.xml
++++ b/packages/SystemUI/res/values-sw720dp-land/dimens.xml
+@@ -24,7 +24,6 @@
+ 
+     <dimen name="qs_media_session_height_expanded">184dp</dimen>
+     <dimen name="qs_content_horizontal_padding">40dp</dimen>
+-    <dimen name="qs_horizontal_margin">40dp</dimen>
+ 
+     <dimen name="controls_panel_corner_radius">40dp</dimen>
+ 
 diff --git a/packages/SystemUI/res/values/dimens.xml b/packages/SystemUI/res/values/dimens.xml
-index b8281d1e1..7ac309385 100644
+index b8281d1e1..d18c32e6a 100644
 --- a/packages/SystemUI/res/values/dimens.xml
 +++ b/packages/SystemUI/res/values/dimens.xml
-@@ -468,6 +468,11 @@
-     <dimen name="status_bar_icon_horizontal_margin">0sp</dimen>
+@@ -717,10 +717,9 @@
+     <dimen name="qqs_layout_padding_bottom">24dp</dimen>
+     <item name="qqs_expand_clock_scale" format="float" type="dimen">2.57</item>
  
-     <!-- the padding on the start of the statusbar -->
-+    <!-- Decoupled from status_bar_padding_start: the status bar reserve exists to clear the
-+         rounded corner, but the lockscreen carrier label has no corner to clear and was
-+         dragged right whenever that reserve changed. -->
-+    <dimen name="keyguard_carrier_text_start_padding">16dp</dimen>
-+
-     <dimen name="status_bar_padding_start">4dp</dimen>
+-    <!-- Most of the time it should be the same as notification_side_paddings as it's vertically
+-         aligned with notifications. The exception is split shade when this value becomes
+-         independent  -->
+-    <dimen name="qs_horizontal_margin">@dimen/notification_side_paddings_single</dimen>
++    <!-- bronco: follow the status bar inset (not the notification margin) so the QS/split-shade
++         clock lands on the status bar clock's x in every config. One source of truth. -->
++    <dimen name="qs_horizontal_margin">@dimen/status_bar_padding_start</dimen>
  
-     <!-- the padding on the end of the statusbar -->
+     <!-- Most of the time it should be the same as notification_shade_content_margin_horizontal as
+          it's vertically aligned with notifications. The exception is split shade when this value
 diff --git a/packages/SystemUI/src/com/android/systemui/statusbar/phone/KeyguardStatusBarView.java b/packages/SystemUI/src/com/android/systemui/statusbar/phone/KeyguardStatusBarView.java
-index fdc338244..5eeaa5f2e 100644
+index fdc338244..c9bae5c41 100644
 --- a/packages/SystemUI/src/com/android/systemui/statusbar/phone/KeyguardStatusBarView.java
 +++ b/packages/SystemUI/src/com/android/systemui/statusbar/phone/KeyguardStatusBarView.java
 @@ -246,7 +246,7 @@ public class KeyguardStatusBarView extends RelativeLayout {
@@ -51,26 +77,34 @@ index fdc338244..5eeaa5f2e 100644
          // mCarrierLabel
          mCarrierLabel.setPaddingRelative(
 -                getResources().getDimensionPixelSize(R.dimen.status_bar_padding_start) + mStatusBarExtraPaddingStart,
-+                getResources().getDimensionPixelSize(R.dimen.keyguard_carrier_text_start_padding) + mStatusBarExtraPaddingStart,
++                mStatusBarExtraPaddingStart,
                  getResources().getDimensionPixelSize(R.dimen.status_bar_padding_top) + mStatusBarExtraPaddingTop,
                  mCarrierLabel.getPaddingEnd(),
                  mCarrierLabel.getPaddingBottom()
+@@ -348,7 +348,7 @@ public class KeyguardStatusBarView extends RelativeLayout {
+         final int minRight = (!isLayoutRtl() && mIsPrivacyDotEnabled)
+                 ? Math.max(mMinDotWidth, mPadding.right) : mPadding.right;
+ 
+-        int top = waterfallTop + mPadding.top;
++        int top = waterfallTop;
+         setPadding(minLeft, top, minRight, 0);
+     }
+ 
 diff --git a/services/core/java/com/android/server/display/mode/DisplayModeDirector.java b/services/core/java/com/android/server/display/mode/DisplayModeDirector.java
-index 6d7a40501..6e7e2bffc 100644
+index 6d7a40501..44eafddff 100644
 --- a/services/core/java/com/android/server/display/mode/DisplayModeDirector.java
 +++ b/services/core/java/com/android/server/display/mode/DisplayModeDirector.java
-@@ -126,6 +126,10 @@ public class DisplayModeDirector {
+@@ -126,6 +126,9 @@ public class DisplayModeDirector {
      private static final String TAG = "DisplayModeDirector";
      private boolean mLoggingEnabled;
  
-+    // bronco: the rate AOD is pinned to while the display is dozing. See
-+    // SettingsObserver.updateDozeRefreshRateLocked().
++    // bronco: rate AOD is pinned to while dozing (docs/issues.md §2).
 +    private static final float DOZE_REFRESH_RATE = 60f;
 +
      private static final int MSG_REFRESH_RATE_RANGE_CHANGED = 1;
      private static final int MSG_LOW_BRIGHTNESS_THRESHOLDS_CHANGED = 2;
      private static final int MSG_DEFAULT_PEAK_REFRESH_RATE_CHANGED = 3;
-@@ -1042,6 +1046,7 @@ public class DisplayModeDirector {
+@@ -1042,6 +1045,7 @@ public class DisplayModeDirector {
          private float mDefaultRefreshRate;
  
          private boolean mIsLowPower = false;
@@ -78,7 +112,7 @@ index 6d7a40501..6e7e2bffc 100644
  
          private final DisplayManager.DisplayListener mDisplayListener =
                  new DisplayManager.DisplayListener() {
-@@ -1062,6 +1067,7 @@ public class DisplayModeDirector {
+@@ -1062,6 +1066,7 @@ public class DisplayModeDirector {
                      public void onDisplayChanged(int displayId) {
                          synchronized (mLock) {
                              updateLowPowerModeAllowedModesLocked();
@@ -86,16 +120,13 @@ index 6d7a40501..6e7e2bffc 100644
                          }
                      }
                  };
-@@ -1273,10 +1279,34 @@ public class DisplayModeDirector {
+@@ -1273,10 +1278,28 @@ public class DisplayModeDirector {
                  peakRefreshRate = highestRefreshRate;
              }
  
 +            if (mIsDoze) {
-+                // bronco: dynamic frame rate switching is disabled device-wide
-+                // (vendor.display.disable_dynamic_fps, which is what stops the panel
-+                // shifting gamma mid-use), so the panel no longer drops to its idle rate
-+                // in AOD. Cap it here instead, riding the user-setting votes so that every
-+                // higher-priority vote -- notably UDFPS -- can still override it.
++                // bronco: DFPS is off device-wide, so the panel keeps its awake rate in AOD.
++                // Cap it here, riding the user-setting votes so UDFPS can still override.
 +                minRefreshRate = Math.min(minRefreshRate, DOZE_REFRESH_RATE);
 +                peakRefreshRate = Math.min(peakRefreshRate, DOZE_REFRESH_RATE);
 +            }
@@ -104,10 +135,7 @@ index 6d7a40501..6e7e2bffc 100644
                      displayId);
          }
  
-+        /**
-+         * bronco: re-vote the refresh rate when the display enters or leaves doze, so AOD
-+         * runs at DOZE_REFRESH_RATE while the awake rate is left alone.
-+         */
++        /** bronco: re-vote on doze enter/exit, so only AOD is capped. */
 +        @GuardedBy("mLock")
 +        private void updateDozeRefreshRateLocked(int displayId) {
 +            final boolean isDoze = mInjector.isDozeState(mInjector.getDisplay(displayId));
