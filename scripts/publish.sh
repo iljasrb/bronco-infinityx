@@ -5,6 +5,7 @@
 #   scripts/publish.sh                        # latest/ replaced, previous kept in archive/
 #   scripts/publish.sh --purge                # drop the old builds, keep only the new one
 #   scripts/publish.sh --purge --no-push      # ... without touching the git feed
+#   scripts/publish.sh --yes --feed-only      # repair bronco.json only (no upload)
 #
 # The upload always goes to a staging directory first. Only after every file is on the
 # server and its size checked does the script touch latest/ (and archive/), so a failed
@@ -31,14 +32,15 @@ site=${PUBLISH_ROOT:?publish: set PUBLISH_ROOT (see infinity/.env.publish)}
 baseurl=${PUBLISH_URL:-https://rom.flac.moe/bronco}
 stage=$site/_staging
 
-dry=1 purge=0 push=1
+dry=1 purge=0 push=1 feed_only=0
 for a in "$@"; do
     case $a in
         --dry-run) dry=1 ;;
         --yes|-y) dry=0 ;;
         --purge)  purge=1 ;;
         --no-push) push=0 ;;
-        *) echo "usage: $0 [--yes] [--purge] [--no-push] [--dry-run]" >&2; exit 2 ;;
+        --feed-only) feed_only=1 ;;
+        *) echo "usage: $0 [--yes] [--purge] [--no-push] [--feed-only] [--dry-run]" >&2; exit 2 ;;
     esac
 done
 
@@ -59,64 +61,71 @@ for f in "$zip" "$imgs" "$rec"; do
     [ -f "$f" ] || { echo "missing artifact: $f" >&2; exit 1; }
 done
 
+build_date=$(sed -n 's/^ro\.build\.date\.utc=//p' "$prod/system/build.prop" 2>/dev/null | head -1)
+[ -n "$build_date" ] || { echo "no ro.build.date.utc in $prod/system/build.prop" >&2; exit 1; }
+url=$baseurl/latest/$name
 md5=$(md5sum "$zip" | cut -d' ' -f1)
 size=$(stat -c %s "$zip")
 echo "publishing $name"
-echo "  tag $tag   $size bytes   md5 $md5"
+echo "  tag $tag   $size bytes   md5 $md5   build date $build_date"
 
 # checksums next to the zip, as the release page has always had them
 tmp=$(mktemp -d); trap 'rm -rf "$tmp"' EXIT
 ( cd "$prod" && md5sum "$name" "additional_images-$tag.zip" recovery.img > "$tmp/MD5SUMS" )
 ( cd "$prod" && sha256sum "$name" "additional_images-$tag.zip" recovery.img > "$tmp/SHA256SUMS" )
 
-echo "1/4 upload -> $stage/"
-rsh "mkdir -p $stage"
-rsync_opts=(-ah --partial)
-[ -t 1 ] && rsync_opts+=(--info=progress2)   # progress spam only on a terminal
-run rsync "${rsync_opts[@]}" \
-    "$zip" "$imgs" "$rec" "$tmp/MD5SUMS" "$tmp/SHA256SUMS" "$host:$stage/"
+if [ "$feed_only" = 1 ]; then
+    echo "feed-only: skipping upload and swap"
+else
+    echo "1/4 upload -> $stage/"
+    rsh "mkdir -p $stage"
+    rsync_opts=(-ah --partial)
+    [ -t 1 ] && rsync_opts+=(--info=progress2)   # progress spam only on a terminal
+    run rsync "${rsync_opts[@]}" \
+        "$zip" "$imgs" "$rec" "$tmp/MD5SUMS" "$tmp/SHA256SUMS" "$host:$stage/"
 
-echo "2/4 verify what landed"
-for f in "$(basename "$zip")" "additional_images-$tag.zip" recovery.img; do
-    local_size=$(stat -c %s "$prod/$f")
-    if [ "$dry" = 1 ]; then
-        printf '  would: check %s is %s bytes on the server\n' "$f" "$local_size"
-        continue
+    echo "2/4 verify what landed"
+    for f in "$(basename "$zip")" "additional_images-$tag.zip" recovery.img; do
+        local_size=$(stat -c %s "$prod/$f")
+        if [ "$dry" = 1 ]; then
+            printf '  would: check %s is %s bytes on the server\n' "$f" "$local_size"
+            continue
+        fi
+        remote_size=$(ssh "$host" "bash -lc \"stat -c %s $stage/$f\"" 2>/dev/null || echo 0)
+        [ "$remote_size" = "$local_size" ] ||
+            { echo "upload incomplete: $f is $remote_size of $local_size bytes; latest/ untouched" >&2; exit 1; }
+        echo "  ok $f ($local_size bytes)"
+    done
+
+    echo "3/4 swap into place$( [ "$purge" = 1 ] && echo ' (purge: old builds deleted)')"
+    if [ "$purge" = 1 ]; then
+        rsh "rm -rf $site/archive $site/latest && mv $stage $site/latest"
+    else
+        rsh "mkdir -p $site/archive && rm -rf $site/archive/$tag &&
+             { [ -d $site/latest ] && mv $site/latest $site/archive/$tag || true; } &&
+             mv $stage $site/latest"
     fi
-    remote_size=$(ssh "$host" "bash -lc \"stat -c %s $stage/$f\"" 2>/dev/null || echo 0)
-    [ "$remote_size" = "$local_size" ] ||
-        { echo "upload incomplete: $f is $remote_size of $local_size bytes; latest/ untouched" >&2; exit 1; }
-    echo "  ok $f ($local_size bytes)"
-done
 
-echo "3/4 swap into place$( [ "$purge" = 1 ] && echo ' (purge: old builds deleted)')"
-if [ "$purge" = 1 ]; then
-    rsh "rm -rf $site/archive $site/latest && mv $stage $site/latest"
-else
-    rsh "mkdir -p $site/archive && rm -rf $site/archive/$tag &&
-         { [ -d $site/latest ] && mv $site/latest $site/archive/$tag || true; } &&
-         mv $stage $site/latest"
-fi
+    echo "4/4 verify the served file"
+    if [ "$dry" = 0 ]; then
+        got=$(curl -sIL "$url" | awk 'tolower($1)=="content-length:"{v=$2} END{print v+0}')
+        [ "$got" = "$size" ] || { echo "verify FAILED: $url serves $got bytes, want $size" >&2; exit 1; }
+        echo "  verified: $url ($got bytes)"
+    else
+        echo "  would: curl -sIL $url"
+    fi
 
-echo "4/4 verify the served file"
-url=$baseurl/latest/$name
-if [ "$dry" = 0 ]; then
-    got=$(curl -sIL "$url" | awk 'tolower($1)=="content-length:"{v=$2} END{print v+0}')
-    [ "$got" = "$size" ] || { echo "verify FAILED: $url serves $got bytes, want $size" >&2; exit 1; }
-    echo "  verified: $url ($got bytes)"
-else
-    echo "  would: curl -sIL $url"
-fi
+fi  # end feed_only guard
 
 # OTA feed: the Updater app reads this from raw.githubusercontent.com
 if [ "$dry" = 1 ]; then
     echo "  would: rewrite bronco.json for $name"
 else
-    python3 - "$infra/bronco.json" "$name" "$url" "$size" "$md5" <<'PY'
-import json, sys, time
-feed, name, url, size, md5 = sys.argv[1:6]
+    python3 - "$infra/bronco.json" "$name" "$url" "$size" "$md5" "$build_date" <<'PY'
+import json, sys
+feed, name, url, size, md5, build_date = sys.argv[1:7]
 json.dump({"response": [{"filename": name, "download": url, "size": int(size),
-                         "timestamp": int(time.time()), "version": "4.1", "md5": md5}]},
+                         "timestamp": int(build_date), "version": "4.1", "md5": md5}]},
           open(feed, "w"), indent=2)
 open(feed, "a").write("\n")
 PY
