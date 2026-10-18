@@ -84,18 +84,19 @@ index 64034e9..40b59ec 100644
      <dimen name="status_bar_padding_top">0dp</dimen>
  </resources>
 diff --git a/resource-overlay/device/SystemUI/res/values/dimens.xml b/resource-overlay/device/SystemUI/res/values/dimens.xml
-index 667c4ca..01d3891 100644
+index 667c4ca..34a737b 100644
 --- a/resource-overlay/device/SystemUI/res/values/dimens.xml
 +++ b/resource-overlay/device/SystemUI/res/values/dimens.xml
-@@ -4,8 +4,17 @@
+@@ -4,8 +4,18 @@
       SPDX-License-Identifier: Apache-2.0
  -->
  <resources>
 -    <!-- the padding on the start of the statusbar -->
 -    <dimen name="status_bar_padding_start">8dp</dimen>
-+    <!-- Motorola/LineageOS ship 8dp; 30dp = 75px puts the status bar clock on the same x as the
-+         QS clock, and the end side reserves the same corner room. -->
-+    <dimen name="status_bar_padding_start">30dp</dimen>
++    <!-- Motorola/LineageOS ship 8dp. 25dp = 62px: 5dp tighter than the 30dp used through
++         18.10, which puts the clock (and the QS header, it derives from this) where the user
++         measured it as best. The end side stays at 6dp for the privacy dot. -->
++    <dimen name="status_bar_padding_start">25dp</dimen>
 +
 +    <!-- 5.6dp = 14px: the value the shipped bronco build measured best against the QS header. -->
 +    <dimen name="status_bar_padding_top">5.6dp</dimen>
