@@ -71,11 +71,23 @@ index 6f18a5d..42781f9 100644
      <bool name="config_screen_off_udfps_enabled">true</bool>
 +    <integer name="config_defaultRefreshRateInZone">144</integer>
  </resources>
+diff --git a/resource-overlay/device/SystemUI/res/values-land/dimens.xml b/resource-overlay/device/SystemUI/res/values-land/dimens.xml
+index 64034e9..40b59ec 100644
+--- a/resource-overlay/device/SystemUI/res/values-land/dimens.xml
++++ b/resource-overlay/device/SystemUI/res/values-land/dimens.xml
+@@ -7,6 +7,7 @@
+     <!-- the padding on the start of the statusbar -->
+     <dimen name="status_bar_padding_start">8dp</dimen>
+ 
++    <!-- no status_bar_padding_end here: the fixed inset already exceeds the 8dp start gap -->
+     <!-- the padding on the top of the statusbar (usually 0) -->
+     <dimen name="status_bar_padding_top">0dp</dimen>
+ </resources>
 diff --git a/resource-overlay/device/SystemUI/res/values/dimens.xml b/resource-overlay/device/SystemUI/res/values/dimens.xml
-index 667c4ca..8ef9474 100644
+index 667c4ca..01d3891 100644
 --- a/resource-overlay/device/SystemUI/res/values/dimens.xml
 +++ b/resource-overlay/device/SystemUI/res/values/dimens.xml
-@@ -4,8 +4,16 @@
+@@ -4,8 +4,17 @@
       SPDX-License-Identifier: Apache-2.0
  -->
  <resources>
@@ -88,9 +100,10 @@ index 667c4ca..8ef9474 100644
 +    <!-- 5.6dp = 14px: the value the shipped bronco build measured best against the QS header. -->
 +    <dimen name="status_bar_padding_top">5.6dp</dimen>
 +
-+    <!-- Right edge: match the QS header so the battery sits at the same x as the last QS tile. -->
++    <!-- 6dp: enough that the privacy/appops dot clears the battery, small enough that the dot reads
++         as the next icon (dot gap ~6dp). Larger values (14dp) leave a visible hole. -->
 +    <dimen name="ongoing_appops_dot_min_padding">14dp</dimen>
-+    <dimen name="status_bar_padding_end">0dp</dimen>
++    <dimen name="status_bar_padding_end">6dp</dimen>
  
      <!-- Height of the status bar header bar when on Keyguard -->
      <dimen name="status_bar_header_height_keyguard">@*android:dimen/status_bar_height</dimen>
