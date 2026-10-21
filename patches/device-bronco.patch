@@ -12,7 +12,7 @@ diff --git a/lineage_bronco.mk b/infinity_bronco.mk
 similarity index 77%
 rename from lineage_bronco.mk
 rename to infinity_bronco.mk
-index f5a39ec..d64707d 100644
+index b8009d6..8053b75 100644
 --- a/lineage_bronco.mk
 +++ b/infinity_bronco.mk
 @@ -22,10 +22,16 @@ $(call inherit-product, $(SRC_TARGET_DIR)/product/full_base_telephony.mk)

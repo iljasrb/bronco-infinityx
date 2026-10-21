@@ -150,22 +150,24 @@ index 6d7a40501..44eafddff 100644
          private void updateRefreshRateSettingLocked(float minRefreshRate, float peakRefreshRate,
                  float defaultRefreshRate, int displayId) {
 diff --git a/services/core/java/com/android/server/policy/PhoneWindowManager.java b/services/core/java/com/android/server/policy/PhoneWindowManager.java
-index 11f04eef0..853ec2029 100644
+index 11f04eef0..885234a29 100644
 --- a/services/core/java/com/android/server/policy/PhoneWindowManager.java
 +++ b/services/core/java/com/android/server/policy/PhoneWindowManager.java
-@@ -2423,13 +2423,23 @@ public class PhoneWindowManager implements WindowManagerPolicy {
+@@ -2422,6 +2422,13 @@ public class PhoneWindowManager implements WindowManagerPolicy {
+             case NOTHING:
                  return false;
              case PLAY_PAUSE_MUSIC:
-                 return true;
++            case TORCH:
++                return true;
 +            case SEARCH:
 +            case VOICE_SEARCH:
 +            case IN_APP_SEARCH:
 +                // Search over the keyguard is legitimate (assist/keyguard handle their own
 +                // policy); the keyguard check below blocked it while merely locked.
-+                return true;
+                 return true;
              case LAUNCH_CAMERA:
              case SLEEP:
-             case SCREENSHOT:
+@@ -2429,7 +2436,11 @@ public class PhoneWindowManager implements WindowManagerPolicy {
              case PARTIAL_SCREENSHOT:
                  return isScreenOn();
              default:
