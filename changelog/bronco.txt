@@ -1,11 +1,13 @@
 Project Infinity X 4.1 (Android 17) for the Motorola ThinkPhone
-Build 2026-10-18  UNOFFICIAL
+Build 2026-10-21  UNOFFICIAL
 
-- Privacy dot no longer overlaps the battery; the status bar gaps mirror each other.
-- Quick settings and the shade header follow the status bar inset on any screen size.
-- Keyguard carrier text is no longer inset twice.
-- Fixed double-tap to wake.
-- Fixed screen flickering.
-- Single refresh-rate choice (60/90/120/144 Hz).
-- AOD forced to 60 Hz.
+- Red ThinkKey now works with the screen off (torch/search no longer swallowed by the keyguard).
+- Search and torch work while the lock screen is showing.
+- Brightness reports the panel's real 514 nits instead of 1000, so auto brightness and the
+  brightness percentage stop lying (HBM/outdoor peak stays ~1069).
+- Fixed the display staying black after sleep while outdoor mode (HBM) was engaged.
+- USB-C power/data role switching works (ueventd + sysfs_typec label).
+- Synced to the 20.10 Infinity X changes: Play Integrity fixes (strong integrity), keystore
+  provider / ROM signature / Play Store SDK spoofing, banking-app detection hardening.
 - Stock Motorola camera included.
+- Single refresh-rate choice (60/90/120/144 Hz) - the panel shifts gamma on rate changes.

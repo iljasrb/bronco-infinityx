@@ -60,15 +60,11 @@ done
 
 [ -n "$PATCH_ONLY" ] && { echo "patches ok"; exit 0; }
 
-# motocamera / dolby prebuilts are too big for a patch; they live untracked in
-# the tree. Restore from infra/stock/*.tar.zst if missing.
+# motocamera prebuilts are too big for a patch; they live untracked in the tree.
+# Restore from infra/stock/motocamera.tar.zst if missing.
 [[ -d $bronco/motocamera ]] || {
     echo "motocamera prebuilts missing: $bronco/motocamera/" >&2
     echo "restore: tar -C $bronco -xf $infra/stock/motocamera.tar.zst" >&2
-    exit 1; }
-[[ -d $bronco/dolby/bin ]] || {
-    echo "dolby prebuilts missing: $bronco/dolby/bin/" >&2
-    echo "restore: zstd -dc $infra/stock/dolby.tar.zst | tar -C $bronco -x" >&2
     exit 1; }
 
 # aapt2 reports bad XML 25 min into the build; fail here instead.
