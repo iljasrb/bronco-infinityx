@@ -35,10 +35,85 @@ index f5a39ec..d64707d 100644
  PRODUCT_MANUFACTURER := motorola
  PRODUCT_BRAND := motorola
 diff --git a/resource-overlay/device/Frameworks/res/values/config.xml b/resource-overlay/device/Frameworks/res/values/config.xml
-index 6f18a5d..42781f9 100644
+index 6f18a5d..79fbe1e 100644
 --- a/resource-overlay/device/Frameworks/res/values/config.xml
 +++ b/resource-overlay/device/Frameworks/res/values/config.xml
-@@ -172,7 +172,8 @@
+@@ -98,20 +98,20 @@
+          array. The brightness values must be non-negative and non-decreasing. This must be
+          overridden in platform specific overlays -->
+     <array name="config_autoBrightnessDisplayValuesNits">
+-        <item>3</item>
+-        <item>7</item>
+-        <item>10</item>
+-        <item>12</item>
+-        <item>24</item>
+-        <item>82</item>
+-        <item>96</item>
+-        <item>130</item>
+-        <item>192</item>
+-        <item>325</item>
+-        <item>500</item>
+-        <item>700</item>
+-        <item>800</item>
+-        <item>1000</item>
++        <item>1.5</item>
++        <item>3.6</item>
++        <item>5.1</item>
++        <item>6.2</item>
++        <item>12.3</item>
++        <item>42</item>
++        <item>49</item>
++        <item>67</item>
++        <item>99</item>
++        <item>167</item>
++        <item>257</item>
++        <item>360</item>
++        <item>411</item>
++        <item>514</item>
+     </array>
+ 
+     <!-- An array describing the screen's backlight values corresponding to the brightness
+@@ -140,23 +140,25 @@
+          should be measured with an all white image while the display is in the fully on state.
+          Note that this value should *not* reflect the maximum brightness value for any high
+          brightness modes but only the maximum brightness value obtainable in a sustainable manner.
++         bronco: scaled so the top is 514 nits, the panel's measured SDR peak (the generic
++         Lineage set claimed 1000, which the ThinkPhone only reaches in HBM).
+ 
+          This array should be equal in size to config_screenBrightnessBacklight -->
+     <array name="config_screenBrightnessNits">
+-        <item>3</item>
+-        <item>7</item>
+-        <item>10</item>
+-        <item>12</item>
+-        <item>24</item>
+-        <item>82</item>
+-        <item>96</item>
+-        <item>130</item>
+-        <item>192</item>
+-        <item>325</item>
+-        <item>500</item>
+-        <item>700</item>
+-        <item>800</item>
+-        <item>1000</item>
++        <item>1.5</item>
++        <item>3.6</item>
++        <item>5.1</item>
++        <item>6.2</item>
++        <item>12.3</item>
++        <item>42</item>
++        <item>49</item>
++        <item>67</item>
++        <item>99</item>
++        <item>167</item>
++        <item>257</item>
++        <item>360</item>
++        <item>411</item>
++        <item>514</item>
+     </array>
+ 
+     <!-- MMS user agent string, for example OemNameDeviceName
+@@ -172,7 +174,8 @@
  
      <!-- If true, the doze component is not started until after the screen has been
           turned off and the screen off animation has been performed. -->
@@ -48,7 +123,7 @@ index 6f18a5d..42781f9 100644
  
      <!-- Type of the double tap sensor. Empty if double tap is not supported. -->
      <string name="config_dozeDoubleTapSensorType" translatable="false">org.lineageos.sensor.double_tap</string>
-@@ -284,14 +285,12 @@
+@@ -284,14 +287,12 @@
           the brightness value is negative, only the lux threshold is applied. -->
      <!-- Low zone brightness thresholds in the range [0, 255] -->
      <integer-array name="config_brightnessThresholdsOfPeakRefreshRate">
@@ -65,7 +140,7 @@ index 6f18a5d..42781f9 100644
      </integer-array>
  
      <!-- List of biometric sensors on the device, in decreasing strength. Consumed by AuthService
-@@ -311,4 +310,5 @@
+@@ -311,4 +312,5 @@
  
      <!-- Whether to enable fp unlock when screen turns off on udfps devices -->
      <bool name="config_screen_off_udfps_enabled">true</bool>

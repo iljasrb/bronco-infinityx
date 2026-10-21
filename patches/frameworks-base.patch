@@ -149,3 +149,32 @@ index 6d7a40501..44eafddff 100644
          @GuardedBy("mLock")
          private void updateRefreshRateSettingLocked(float minRefreshRate, float peakRefreshRate,
                  float defaultRefreshRate, int displayId) {
+diff --git a/services/core/java/com/android/server/policy/PhoneWindowManager.java b/services/core/java/com/android/server/policy/PhoneWindowManager.java
+index 11f04eef0..853ec2029 100644
+--- a/services/core/java/com/android/server/policy/PhoneWindowManager.java
++++ b/services/core/java/com/android/server/policy/PhoneWindowManager.java
+@@ -2423,13 +2423,23 @@ public class PhoneWindowManager implements WindowManagerPolicy {
+                 return false;
+             case PLAY_PAUSE_MUSIC:
+                 return true;
++            case SEARCH:
++            case VOICE_SEARCH:
++            case IN_APP_SEARCH:
++                // Search over the keyguard is legitimate (assist/keyguard handle their own
++                // policy); the keyguard check below blocked it while merely locked.
++                return true;
+             case LAUNCH_CAMERA:
+             case SLEEP:
+             case SCREENSHOT:
+             case PARTIAL_SCREENSHOT:
+                 return isScreenOn();
+             default:
+-                return !keyguardOn();
++                // Lineage: also honour the action when the key is pressed while the screen is
++                // off. keyguardOn() is true whenever the device is locked, i.e. exactly the
++                // screen-off state, so this used to make every screen-off press a no-op while
++                // the press still woke the device.
++                return !keyguardOn() || !isScreenOn();
+         }
+     }
+ 

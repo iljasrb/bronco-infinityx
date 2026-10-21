@@ -21,6 +21,40 @@ index cdc91c5..315b695 100644
  BOARD_BOOTIMAGE_PARTITION_SIZE := 100663296
  BOARD_DTBOIMG_PARTITION_SIZE := 25165824
  BOARD_RECOVERYIMAGE_PARTITION_SIZE := 104857600
+diff --git a/init/ueventd.rc b/init/ueventd.rc
+index 0f03323..37fa214 100644
+--- a/init/ueventd.rc
++++ b/init/ueventd.rc
+@@ -421,9 +421,15 @@ subsystem mem_buf_vm
+ # NPU device
+ /dev/msm_npu             0644   system     system
+ 
+-# USB role switch
+-/sys/class/dual_role_usb/*	data_role	0660	system	system
+-/sys/class/dual_role_usb/*	power_role	0660	system	system
++# USB role switch. This device has no dual_role_usb node: the qcom UCSI driver exposes the
++# typec class instead, and those attributes are created root:root 0644, so the USB HAL (uid
++# system) cannot change the power/data role ("USB controlled by" / "Charge connected device"
++# fail with "Couldn't switch", LineageOS issue #574). Class rule plus the real device path,
++# because ueventd matches the device directory, not the class symlink.
++/sys/class/typec/*	power_role	0660	system	system
++/sys/class/typec/*	data_role	0660	system	system
++/sys/devices/platform/soc/soc:qcom,pmic_glink/soc:qcom,pmic_glink:qcom,ucsi/typec/port0	power_role	0660	system	system
++/sys/devices/platform/soc/soc:qcom,pmic_glink/soc:qcom,pmic_glink:qcom,ucsi/typec/port0	data_role	0660	system	system
+ /sys/class/dual_role_usb/*	mode		0660	system	system
+ 
+ #Memory Offline
+diff --git a/sepolicy/vendor/genfs_contexts b/sepolicy/vendor/genfs_contexts
+new file mode 100644
+index 0000000..669e8af
+--- /dev/null
++++ b/sepolicy/vendor/genfs_contexts
+@@ -0,0 +1,5 @@
++# USB-C role switch (LineageOS issue #574): the qcom UCSI device exposes the typec class
++# attributes under the pmic_glink child, so they keep the generic sysfs label and the
++# vendor_hal_usb_qti rw_file_perms rule on sysfs_typec never matched. Label the typec subtree
++# so the USB HAL can write power_role/data_role.
++genfscon sysfs /devices/platform/soc/soc:qcom,pmic_glink/soc:qcom,pmic_glink:qcom,ucsi/typec u:object_r:sysfs_typec:s0
 diff --git a/vendor.prop b/vendor.prop
 index 144717a..c4285a2 100644
 --- a/vendor.prop

@@ -13,3 +13,65 @@ index 7ae1446..9dba87a 100644
  				break;
  
  			ts_mmi_queued_power_on(touch_cdev);
+diff --git a/qcom/opensource/display-drivers/msm/dsi/dsi_panel.c b/qcom/opensource/display-drivers/msm/dsi/dsi_panel.c
+index 8e13281..644b014 100644
+--- a/qcom/opensource/display-drivers/msm/dsi/dsi_panel.c
++++ b/qcom/opensource/display-drivers/msm/dsi/dsi_panel.c
+@@ -6604,6 +6604,22 @@ error:
+ 		panel->curDCModeParaInfo.value = panel->dc_state;
+ 		dsi_panel_send_param_cmd(panel, &panel->curDCModeParaInfo);
+ 	}
++
++	/*
++	 * bronco: HBM is not part of the panel's on-sequence, and the cached parameter state was
++	 * cleared on display off (see dsi_panel_disable). Re-apply it here, otherwise the panel
++	 * comes up at the normal backlight while userspace still believes HBM is enabled.
++	 */
++	if (panel->hbm_state_saved != HBM_OFF_STATE) {
++		struct msm_param_info hbm_info = {
++			.param_idx = PARAM_HBM_ID,
++			.value = panel->hbm_state_saved,
++		};
++
++		panel->hbm_state_saved = HBM_OFF_STATE;
++		DSI_INFO("-: re-applying HBM state %d\n", hbm_info.value);
++		dsi_panel_set_hbm(panel, &hbm_info);
++	}
+ 	return rc;
+ }
+ 
+@@ -6707,6 +6723,21 @@ int dsi_panel_disable(struct dsi_panel *panel)
+ 	panel->panel_initialized = false;
+ 	panel->power_mode = SDE_MODE_DPMS_OFF;
+ 
++	/*
++	 * bronco: the panel's on-sequence does not restore HBM, but the cached parameter
++	 * state survives the off/on cycle. While it still says "HBM on", every backlight
++	 * update is dropped (dsi_panel_set_hbm_backlight), so after a sleep/wake with HBM
++	 * engaged the panel comes up black / stuck at the last level. Clear the cached
++	 * state here so the next enable starts from a normal backlight; userspace (LiveDisplay
++	 * outdoor mode or the sysfs node) re-enables HBM when it still wants it.
++	 */
++	if (panel->param_cmds &&
++	    panel->param_cmds[PARAM_HBM_ID].value != HBM_OFF_STATE) {
++		DSI_INFO("[%s] clearing cached HBM state on display off\n", panel->name);
++		panel->hbm_state_saved = panel->param_cmds[PARAM_HBM_ID].value;
++		panel->param_cmds[PARAM_HBM_ID].value = HBM_OFF_STATE;
++	}
++
+ 	PANEL_NOTIFY(PANEL_EVENT_DISPLAY_OFF);
+ 
+ 	mutex_unlock(&panel->panel_lock);
+diff --git a/qcom/opensource/display-drivers/msm/dsi/dsi_panel.h b/qcom/opensource/display-drivers/msm/dsi/dsi_panel.h
+index 37554b7..007913b 100644
+--- a/qcom/opensource/display-drivers/msm/dsi/dsi_panel.h
++++ b/qcom/opensource/display-drivers/msm/dsi/dsi_panel.h
+@@ -445,6 +445,8 @@ struct dsi_panel {
+ 
+ 	enum panel_hbm_type hbm_type;
+ 	u32  bl_lvl_during_hbm;
++	/* bronco: HBM state that was active when the display turned off, re-applied on enable */
++	u32  hbm_state_saved;
+ 
+ 	struct panel_param *param_cmds;
+ 
