@@ -20,7 +20,6 @@ PATCHES=(
     "packages/apps/Updater:apps-updater:"
     "device/motorola/bronco:device-bronco:infinity_bronco.mk"
     "device/motorola/sm8475-common:device-sm8475-common:sepolicy/vendor/genfs_contexts"
-    "vendor/motorola/bronco:vendor-bronco:proprietary/vendor/etc/display/advanced_sf_offsets.xml"
     "kernel/motorola/sm8475-modules:kernel-sm8475-modules:"
 )
 

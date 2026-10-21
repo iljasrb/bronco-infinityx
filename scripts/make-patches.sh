@@ -23,5 +23,4 @@ emit packages/apps/Settings         apps-settings
 emit packages/apps/Updater          apps-updater
 emit device/motorola/bronco         device-bronco        infinity_bronco.mk
 emit device/motorola/sm8475-common  device-sm8475-common sepolicy/vendor/genfs_contexts
-emit vendor/motorola/bronco         vendor-bronco        proprietary/vendor/etc/display/advanced_sf_offsets.xml
 emit kernel/motorola/sm8475-modules kernel-sm8475-modules

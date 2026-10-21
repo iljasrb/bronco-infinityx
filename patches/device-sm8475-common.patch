@@ -56,18 +56,10 @@ index 0000000..669e8af
 +# so the USB HAL can write power_role/data_role.
 +genfscon sysfs /devices/platform/soc/soc:qcom,pmic_glink/soc:qcom,pmic_glink:qcom,ucsi/typec u:object_r:sysfs_typec:s0
 diff --git a/vendor.prop b/vendor.prop
-index 144717a..c4285a2 100644
+index 144717a..4330797 100644
 --- a/vendor.prop
 +++ b/vendor.prop
-@@ -167,6 +167,7 @@ vendor.display.enable_async_powermode=1
- vendor.display.enable_async_vds_creation=1
- vendor.display.enable_display_extensions=1
- vendor.display.enable_dpps_dynamic_fps=1
-+# HAL-side dynamic fps off; the framework side is pinned in the overlay.
- vendor.display.enable_early_wakeup=1
- vendor.display.enable_hdr10_gpu_target=1
- vendor.display.enable_optimize_refresh=0
-@@ -321,3 +322,5 @@ wifi.aware.interface=wifi-aware0
+@@ -321,3 +321,5 @@ wifi.aware.interface=wifi-aware0
  
  # ZRAM
  ro.vendor.zram.swapon=true
