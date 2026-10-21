@@ -1,13 +1,13 @@
 Project Infinity X 4.1 (Android 17) for the Motorola ThinkPhone
 Build 2026-10-21  UNOFFICIAL
 
-- Red ThinkKey now works with the screen off (torch/search no longer swallowed by the keyguard).
-- Search and torch work while the lock screen is showing.
-- Brightness reports the panel's real 514 nits instead of 1000, so auto brightness and the
-  brightness percentage stop lying (HBM/outdoor peak stays ~1069).
-- Fixed the display staying black after sleep while outdoor mode (HBM) was engaged.
-- USB-C power/data role switching works (ueventd + sysfs_typec label).
-- Synced to the 20.10 Infinity X changes: Play Integrity fixes (strong integrity), keystore
-  provider / ROM signature / Play Store SDK spoofing, banking-app detection hardening.
-- Stock Motorola camera included.
-- Single refresh-rate choice (60/90/120/144 Hz) - the panel shifts gamma on rate changes.
+- Red ThinkKey works now on unlocked and locked phone. This is a hotfix, waiting for upstream LineageOS fix for it.
+- Replaced display nit values (testing)
+- High Brightness Mode (outdoor mode) is now working properly and you can enable it.
+- USB-C rules fixed, Switching who controls the usb can be done now between devices.
+- Synced to latest 20.10.2026 Infinity X upstream.
+- Strong Integrity can now be achieved
+- WIP: Dolby Atmos integration is in development and could be included in the next builds.
+
+As always please report any bugs to XDA thread or GitHub issues.
+Thank you, @iljasrb
