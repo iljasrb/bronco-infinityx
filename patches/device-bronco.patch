@@ -8,19 +8,179 @@ index 2b513ea..6f7a317 100644
  PRODUCT_MAKEFILES := \
 -    $(LOCAL_DIR)/lineage_bronco.mk
 +    $(LOCAL_DIR)/infinity_bronco.mk
+diff --git a/dolby/Android.mk b/dolby/Android.mk
+new file mode 100644
+index 0000000..681fd26
+--- /dev/null
++++ b/dolby/Android.mk
+@@ -0,0 +1,70 @@
++# Prebuilt Dolby (DAX3 / DMS) pieces taken from the stock W1TBS36H firmware.
++# Sizes: the APK is 42 MB, so this directory stays untracked and is restored
++# from infinity/stock/dolby.tar.zst like motocamera/.
++
++LOCAL_PATH := $(call my-dir)
++
++# --- vendor/bin/hw ------------------------------------------------------------
++include $(CLEAR_VARS)
++LOCAL_MODULE := vendor.dolby.hardware.dms@2.1-service
++LOCAL_MODULE_CLASS := EXECUTABLES
++LOCAL_MODULE_PATH := $(TARGET_OUT_VENDOR)/bin/hw
++LOCAL_SRC_FILES := bin/$(LOCAL_MODULE)
++LOCAL_MODULE_TARGET_ARCH := arm64
++LOCAL_CHECK_ELF_FILES := false
++include $(BUILD_PREBUILT)
++
++include $(CLEAR_VARS)
++LOCAL_MODULE := vendor.dolby.media.c2@1.0-service
++LOCAL_MODULE_CLASS := EXECUTABLES
++LOCAL_MODULE_PATH := $(TARGET_OUT_VENDOR)/bin/hw
++LOCAL_SRC_FILES := bin/$(LOCAL_MODULE)
++LOCAL_MODULE_TARGET_ARCH := arm64
++LOCAL_CHECK_ELF_FILES := false
++include $(BUILD_PREBUILT)
++
++# --- vendor/lib64 -------------------------------------------------------------
++DOLBY_LIBS_64 := \
++    libdlbdsservice.so \
++    libdlbpreg.so \
++    libcodec2_store_dolby.so \
++    vendor.dolby.dms-V1-ndk_platform.so \
++    vendor.dolby.hardware.dms@2.0.so \
++    vendor.dolby.hardware.dms@2.1.so
++
++define dolby-prebuilt-lib
++include $(CLEAR_VARS)
++LOCAL_MODULE := $(1)
++LOCAL_MODULE_CLASS := SHARED_LIBRARIES
++LOCAL_MODULE_PATH := $(TARGET_OUT_VENDOR)/lib64
++LOCAL_SRC_FILES := lib64/$(1)
++LOCAL_MODULE_TARGET_ARCH := arm64
++LOCAL_CHECK_ELF_FILES := false
++include $(BUILD_PREBUILT)
++endef
++$(foreach l,$(DOLBY_LIBS_64),$(eval $(call dolby-prebuilt-lib,$(l))))
++
++# --- vendor/lib (32-bit copies only exist for the three HAL libs) -------------
++define dolby-prebuilt-lib32
++include $(CLEAR_VARS)
++LOCAL_MODULE := $(1)
++LOCAL_MODULE_CLASS := SHARED_LIBRARIES
++LOCAL_MODULE_PATH := $(TARGET_OUT_VENDOR)/lib
++LOCAL_SRC_FILES := lib/$(1)
++LOCAL_MODULE_TARGET_ARCH := arm
++LOCAL_CHECK_ELF_FILES := false
++include $(BUILD_PREBUILT)
++endef
++$(foreach l,vendor.dolby.dms-V1-ndk_platform.so vendor.dolby.hardware.dms@2.0.so \
++    vendor.dolby.hardware.dms@2.1.so,$(eval $(call dolby-prebuilt-lib32,$(l))))
++
++# --- the DAX3 UI app (stock path: /system/app/MotoDolbyDax3) ------------------
++include $(CLEAR_VARS)
++LOCAL_MODULE := MotoDolbyDax3
++LOCAL_MODULE_CLASS := APPS
++LOCAL_MODULE_PATH := $(TARGET_OUT_APPS)/MotoDolbyDax3
++LOCAL_SRC_FILES := apk/MotoDolbyDax3.apk
++LOCAL_CERTIFICATE := PRESIGNED
++LOCAL_MODULE_TARGET_ARCH := arm64
++LOCAL_DEX_PREOPT := false
++include $(BUILD_PREBUILT)
+diff --git a/dolby/dolby.mk b/dolby/dolby.mk
+new file mode 100644
+index 0000000..e7f2465
+--- /dev/null
++++ b/dolby/dolby.mk
+@@ -0,0 +1,34 @@
++# Dolby (DAX3 + DMS 2.1 + media c2) ported from the stock W1TBS36H firmware.
++# Containment: the whole feature is these files - delete dolby/ + the inherit
++# line and the ROM is back to plain QTI audio (no framework change involved).
++
++PRODUCT_PACKAGES += \
++    MotoDolbyDax3 \
++    vendor.dolby.hardware.dms@2.1-service \
++    vendor.dolby.media.c2@1.0-service \
++    libdlbdsservice.so \
++    libdlbpreg.so \
++    libcodec2_store_dolby.so \
++    vendor.dolby.dms-V1-ndk_platform.so \
++    vendor.dolby.hardware.dms@2.0.so \
++    vendor.dolby.hardware.dms@2.1.so
++
++PRODUCT_COPY_FILES += \
++    $(LOCAL_PATH)/config/dax-default.xml:$(TARGET_COPY_OUT_VENDOR)/etc/dolby/dax-default.xml \
++    $(LOCAL_PATH)/config/media_codecs_dolby_audio.xml:$(TARGET_COPY_OUT_VENDOR)/etc/media_codecs_dolby_audio.xml \
++    $(LOCAL_PATH)/init/vendor.dolby.hardware.dms@2.1-service.rc:$(TARGET_COPY_OUT_VENDOR)/etc/init/vendor.dolby.hardware.dms@2.1-service.rc \
++    $(LOCAL_PATH)/init/vendor.dolby.media.c2@1.0-service.rc:$(TARGET_COPY_OUT_VENDOR)/etc/init/vendor.dolby.media.c2@1.0-service.rc \
++    $(LOCAL_PATH)/vintf/vendor.dolby.hardware.dms.xml:$(TARGET_COPY_OUT_VENDOR)/etc/vintf/manifest/vendor.dolby.hardware.dms.xml \
++    $(LOCAL_PATH)/vintf/vendor.dolby.media.c2@1.0-service.xml:$(TARGET_COPY_OUT_VENDOR)/etc/vintf/manifest/vendor.dolby.media.c2@1.0-service.xml \
++    $(LOCAL_PATH)/privapp/com.dolby.daxservice.xml:$(TARGET_COPY_OUT_SYSTEM_EXT)/etc/permissions/com.dolby.daxservice.xml \
++    $(LOCAL_PATH)/privapp/com.motorola.dolby.dolbyui.dax3.features.xml:$(TARGET_COPY_OUT_SYSTEM)/etc/permissions/com.motorola.dolby.dolbyui.dax3.features.xml \
++    $(LOCAL_PATH)/privapp/hiddenapi-whitelist-com.motorola.dolby.dolbyui.xml:$(TARGET_COPY_OUT_SYSTEM)/etc/sysconfig/hiddenapi-whitelist-com.motorola.dolby.dolbyui.xml \
++    $(LOCAL_PATH)/privapp/default-permissions-com.motorola.dolby.dolbyui.xml:$(TARGET_COPY_OUT_PRODUCT)/etc/default-permissions/default-permissions-com.motorola.dolby.dolbyui.xml
++
++PRODUCT_PROPERTY_OVERRIDES += \
++    persist.vendor.audio_fx.current=dolby \
++    ro.vendor.dolby.dax.version=DAX3_3.11.0.10_r2 \
++    vendor.audio.dolby.ds2.enabled=false \
++    vendor.audio.dolby.ds2.hardbypass=false
++
++BOARD_VENDOR_SEPOLICY_DIRS += device/motorola/bronco/dolby/sepolicy
+diff --git a/dolby/sepolicy/dolby.te b/dolby/sepolicy/dolby.te
+new file mode 100644
+index 0000000..65de134
+--- /dev/null
++++ b/dolby/sepolicy/dolby.te
+@@ -0,0 +1,18 @@
++# Dolby DMS 2.1 HAL (stock ships it in hal_dms_default; we define the domain
++# ourselves because neither AOSP nor the QCOM policy tree has it).
++type hal_dms_default, domain;
++type hal_dms_default_exec, exec_type, vendor_file_type, file_type;
++type hal_dms_hwservice, hwservice_manager_type;
++type vendor_dolby_file, file_type, data_file_type, vendor_data_file_type;
++
++init_daemon_domain(hal_dms_default)
++
++# register IDms with hwservicemanager
++allow hal_dms_default hal_dms_hwservice:hwservice_manager add;
++
++# /data/vendor/dolby (dax-default.xml runtime state)
++allow hal_dms_default vendor_dolby_file:dir create_dir_perms;
++allow hal_dms_default vendor_dolby_file:file create_file_perms;
++
++# clients: audio/mediacodec servers and the DAX3 UI app
++allow { audioserver mediaserver mediacodec system_app priv_app untrusted_app } hal_dms_hwservice:hwservice_manager find;
+diff --git a/dolby/sepolicy/file_contexts b/dolby/sepolicy/file_contexts
+new file mode 100644
+index 0000000..4c25392
+--- /dev/null
++++ b/dolby/sepolicy/file_contexts
+@@ -0,0 +1,4 @@
++# Dolby
++/data/vendor/dolby(/.*)?                                u:object_r:vendor_dolby_file:s0
++/(vendor|system/vendor)/bin/hw/vendor\.dolby\.hardware\.dms@2\.1-service    u:object_r:hal_dms_default_exec:s0
++/(vendor|system/vendor)/bin/hw/vendor\.dolby\.media\.c2@1\.0-service        u:object_r:mediacodec_exec:s0
+diff --git a/dolby/sepolicy/hwservice_contexts b/dolby/sepolicy/hwservice_contexts
+new file mode 100644
+index 0000000..a3d9a3f
+--- /dev/null
++++ b/dolby/sepolicy/hwservice_contexts
+@@ -0,0 +1 @@
++vendor.dolby.hardware.dms::IDms    u:object_r:hal_dms_hwservice:s0
 diff --git a/lineage_bronco.mk b/infinity_bronco.mk
-similarity index 77%
+similarity index 71%
 rename from lineage_bronco.mk
 rename to infinity_bronco.mk
-index b8009d6..8053b75 100644
+index b8009d6..435b782 100644
 --- a/lineage_bronco.mk
 +++ b/infinity_bronco.mk
-@@ -22,10 +22,16 @@ $(call inherit-product, $(SRC_TARGET_DIR)/product/full_base_telephony.mk)
+@@ -22,10 +22,19 @@ $(call inherit-product, $(SRC_TARGET_DIR)/product/full_base_telephony.mk)
  # Inherit from bronco device
  $(call inherit-product, device/motorola/bronco/device.mk)
  
 +# Stock Motorola camera prebuilt (see motocamera/motocamera.mk)
 +$(call inherit-product, device/motorola/bronco/motocamera/motocamera.mk)
++
++# Dolby DAX3 + DMS from stock (see dolby/dolby.mk; delete that dir + this line to remove)
++$(call inherit-product, device/motorola/bronco/dolby/dolby.mk)
 +
  # Inherit some common Lineage stuff.
 -$(call inherit-product, vendor/lineage/config/common_full_phone.mk)
