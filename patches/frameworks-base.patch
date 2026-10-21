@@ -150,7 +150,7 @@ index 6d7a40501..44eafddff 100644
          private void updateRefreshRateSettingLocked(float minRefreshRate, float peakRefreshRate,
                  float defaultRefreshRate, int displayId) {
 diff --git a/services/core/java/com/android/server/policy/PhoneWindowManager.java b/services/core/java/com/android/server/policy/PhoneWindowManager.java
-index 11f04eef0..885234a29 100644
+index 11f04eef0..02bb9ff67 100644
 --- a/services/core/java/com/android/server/policy/PhoneWindowManager.java
 +++ b/services/core/java/com/android/server/policy/PhoneWindowManager.java
 @@ -2422,6 +2422,13 @@ public class PhoneWindowManager implements WindowManagerPolicy {
@@ -180,3 +180,17 @@ index 11f04eef0..885234a29 100644
          }
      }
  
+@@ -5842,7 +5853,12 @@ public class PhoneWindowManager implements WindowManagerPolicy {
+                         }
+                     }
+                 }
+-                result &= ~ACTION_PASS_TO_USER;
++                // With both actions set to "Nothing" the ROM has nothing to do with this
++                // key, so let it reach apps (Key Mapper, macros, ...) instead of eating it.
++                if (mAssistPressAction != Action.NOTHING
++                        || mAssistLongPressAction != Action.NOTHING) {
++                    result &= ~ACTION_PASS_TO_USER;
++                }
+                 break;
+             }
+             case KeyEvent.KEYCODE_VOICE_ASSIST: {
