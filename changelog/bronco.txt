@@ -2,6 +2,7 @@ Project Infinity X 4.1 (Android 17) for the Motorola ThinkPhone
 Build 2026-10-21  UNOFFICIAL
 
 - Red ThinkKey works now on unlocked and locked phone. This is a hotfix, waiting for upstream LineageOS fix for it.
+- You can map the key in applications like Key Mapper by changing both short and long action in the system settings to no action.
 - Replaced display nit values (testing)
 - High Brightness Mode (outdoor mode) is now working properly and you can enable it.
 - USB-C rules fixed, Switching who controls the usb can be done now between devices.
