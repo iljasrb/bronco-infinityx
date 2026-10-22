@@ -1,14 +1,9 @@
 Project Infinity X 4.1 (Android 17) for the Motorola ThinkPhone
-Build 2026-10-21  UNOFFICIAL
+Build 2026-10-22  UNOFFICIAL
 
-- Red ThinkKey works now on unlocked and locked phone. This is a hotfix, waiting for upstream LineageOS fix for it.
-- You can map the key in applications like Key Mapper by changing both short and long action in the system settings to no action.
-- Replaced display nit values (testing)
-- High Brightness Mode (outdoor mode) is now working properly and you can enable it.
-- USB-C rules fixed, Switching who controls the usb can be done now between devices.
-- Synced to latest 20.10.2026 Infinity X upstream.
-- Strong Integrity can now be achieved
-- WIP: Dolby Atmos integration is in development and could be included in the next builds.
-
-As always please report any bugs to XDA thread or GitHub issues.
-Thank you, @iljasrb
+- Fixed the fingerprint / outdoor-mode problems from the tester report (display driver):
+  - no more lit fingerprint patch on a black screen after the display was turned off while a scan was still waiting,
+  - outdoor High Brightness Mode is no longer dropped when a fingerprint scan ends (it used to dim right after unlocking),
+  - a scan in flight when the screen turns off no longer leaves the sensor area lit after waking.
+- High Brightness Mode now survives sleep without the black-screen wedge.
+- No other user-visible change: everything from 21.10 stays (red ThinkKey on the lock screen and with the screen off, USB-C role switching, true 514-nit SDR brightness curve, Infinity X upstream as of 20.10).
