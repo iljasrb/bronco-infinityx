@@ -14,10 +14,75 @@ index 7ae1446..9dba87a 100644
  
  			ts_mmi_queued_power_on(touch_cdev);
 diff --git a/qcom/opensource/display-drivers/msm/dsi/dsi_panel.c b/qcom/opensource/display-drivers/msm/dsi/dsi_panel.c
-index 8e13281..644b014 100644
+index 8e13281..966f822 100644
 --- a/qcom/opensource/display-drivers/msm/dsi/dsi_panel.c
 +++ b/qcom/opensource/display-drivers/msm/dsi/dsi_panel.c
-@@ -6604,6 +6604,22 @@ error:
+@@ -5,6 +5,7 @@
+  */
+ 
+ #include <linux/delay.h>
++#include <linux/sched.h>
+ #include <linux/slab.h>
+ #include <linux/gpio.h>
+ #include <linux/of_gpio.h>
+@@ -1459,6 +1460,48 @@ static int dsi_panel_set_hbm(struct dsi_panel *panel,
+ 	u32 bl_lvl;
+ 	struct dsi_panel_lhbm_config *lhbm_config = &panel->lhbm_config;
+ 
++	/*
++	 * bronco: the FOD HAL ends every scan with HBM_OFF, silently dropping an
++	 * outdoor HBM (HBM_ON_STATE) that LiveDisplay asked for -- the screen dims
++	 * right after a fingerprint unlock and stays dim until LiveDisplay happens
++	 * to re-assert. Remember the state that was active when the FOD pulse
++	 * started, plus the requesting pid, and when that same caller ends the
++	 * pulse with HBM_OFF, restore what was there. Matching on the pid (both
++	 * requests come from the FOD HAL's ioctl context) instead of a timeout also
++	 * covers scans that wait a long time for a finger. LiveDisplay's own off
++	 * requests come from another pid and are honoured as usual.
++	 */
++	mutex_lock(&panel->hbm_fod_lock);
++	if (param_info->value == HBM_FOD_ON_STATE) {
++		panel->hbm_state_before_fod = panel->param_cmds[PARAM_HBM_ID].value;
++		panel->hbm_fod_owner_pid = task_tgid_nr(current);
++	} else if (param_info->value == HBM_OFF_STATE) {
++		pid_t tgid = task_tgid_nr(current);
++
++		/*
++		 * Unlocking straight from a dark screen: the panel is off when the
++		 * pulse starts (state 0), LiveDisplay then asserts outdoor HBM (1)
++		 * during the wake, and only afterwards the FOD HAL ends the pulse with
++		 * 0 -- which would drop it again. So the outdoor state may be either
++		 * the one remembered at pulse start or the one cached right now.
++		 */
++		if (panel->hbm_fod_owner_pid == tgid &&
++		    (panel->hbm_state_before_fod == HBM_ON_STATE ||
++		     panel->param_cmds[PARAM_HBM_ID].value == HBM_ON_STATE)) {
++			param_info->value = HBM_ON_STATE;
++			DSI_INFO("bronco: FOD-off with outdoor HBM active, restoring HBM\n");
++		} else if (panel->hbm_fod_owner_pid) {
++			DSI_INFO("bronco: HBM off from pid %d, FOD owner %d, state before %u\n",
++				 tgid, panel->hbm_fod_owner_pid,
++				 panel->hbm_state_before_fod);
++		}
++	}
++	if (param_info->value != HBM_FOD_ON_STATE) {
++		panel->hbm_state_before_fod = HBM_OFF_STATE;
++		panel->hbm_fod_owner_pid = 0;
++	}
++	mutex_unlock(&panel->hbm_fod_lock);
++
+ 	pr_info("Set HBM to (%d)\n", param_info->value);
+ 	if(panel->delect_dc_onoff && param_info->value==0)
+ 		mot_update_hbmoff(panel, param_info);
+@@ -5250,6 +5293,7 @@ struct dsi_panel *dsi_panel_get(struct device *parent,
+ 	drm_panel_add(&panel->drm_panel);
+ 
+ 	mutex_init(&panel->panel_lock);
++	mutex_init(&panel->hbm_fod_lock);
+ 
+ 	return panel;
+ error:
+@@ -6604,6 +6648,22 @@ error:
  		panel->curDCModeParaInfo.value = panel->dc_state;
  		dsi_panel_send_param_cmd(panel, &panel->curDCModeParaInfo);
  	}
@@ -40,7 +105,7 @@ index 8e13281..644b014 100644
  	return rc;
  }
  
-@@ -6707,6 +6723,21 @@ int dsi_panel_disable(struct dsi_panel *panel)
+@@ -6707,6 +6767,39 @@ int dsi_panel_disable(struct dsi_panel *panel)
  	panel->panel_initialized = false;
  	panel->power_mode = SDE_MODE_DPMS_OFF;
  
@@ -54,8 +119,26 @@ index 8e13281..644b014 100644
 +	 */
 +	if (panel->param_cmds &&
 +	    panel->param_cmds[PARAM_HBM_ID].value != HBM_OFF_STATE) {
++		u32 hbm = panel->param_cmds[PARAM_HBM_ID].value;
++
 +		DSI_INFO("[%s] clearing cached HBM state on display off\n", panel->name);
-+		panel->hbm_state_saved = panel->param_cmds[PARAM_HBM_ID].value;
++		/*
++		 * A FOD pulse in flight has overwritten the cached state with its own
++		 * value, so look through it: if outdoor HBM was active when the pulse
++		 * started, that is what has to survive the display cycle.
++		 */
++		if (hbm == HBM_FOD_ON_STATE &&
++		    panel->hbm_state_before_fod == HBM_ON_STATE)
++			hbm = HBM_ON_STATE;
++		/*
++		 * bronco: only outdoor HBM (HBM_ON_STATE) is meant to survive a display
++		 * cycle. HBM_FOD_ON_STATE is transient and owned by the FOD HAL -- saving
++		 * it re-applied the fingerprint-area illumination on the next display on,
++		 * which showed up as a lit patch on an otherwise black screen until the
++		 * next display cycle. Drop it instead of restoring it.
++		 */
++		if (hbm == HBM_ON_STATE)
++			panel->hbm_state_saved = HBM_ON_STATE;
 +		panel->param_cmds[PARAM_HBM_ID].value = HBM_OFF_STATE;
 +	}
 +
@@ -63,15 +146,19 @@ index 8e13281..644b014 100644
  
  	mutex_unlock(&panel->panel_lock);
 diff --git a/qcom/opensource/display-drivers/msm/dsi/dsi_panel.h b/qcom/opensource/display-drivers/msm/dsi/dsi_panel.h
-index 37554b7..007913b 100644
+index 37554b7..c0b0477 100644
 --- a/qcom/opensource/display-drivers/msm/dsi/dsi_panel.h
 +++ b/qcom/opensource/display-drivers/msm/dsi/dsi_panel.h
-@@ -445,6 +445,8 @@ struct dsi_panel {
+@@ -445,6 +445,12 @@ struct dsi_panel {
  
  	enum panel_hbm_type hbm_type;
  	u32  bl_lvl_during_hbm;
 +	/* bronco: HBM state that was active when the display turned off, re-applied on enable */
 +	u32  hbm_state_saved;
++	/* bronco: HBM state and caller pid of the FOD pulse, so its HBM_OFF can restore it */
++	u32  hbm_state_before_fod;
++	pid_t hbm_fod_owner_pid;
++	struct mutex hbm_fod_lock;
  
  	struct panel_param *param_cmds;
  
