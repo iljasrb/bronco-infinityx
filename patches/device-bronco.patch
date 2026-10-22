@@ -34,6 +34,21 @@ index b8009d6..8053b75 100644
  PRODUCT_DEVICE := bronco
  PRODUCT_MANUFACTURER := motorola
  PRODUCT_BRAND := motorola
+diff --git a/product.prop b/product.prop
+index aafd899..150450f 100644
+--- a/product.prop
++++ b/product.prop
+@@ -6,3 +6,10 @@ ro.opa.device_model_id=motorola-bronco
+ 
+ # SKU specific properties
+ import /product/etc/hardware.sku.${ro.boot.hardware.sku}.prop
++
++# A/B OTA addon.d gate: vendor/infinity's backuptool_ab.sh refuses to back up or
++# restore addons unless this property is in /product/etc/build.prop (upstream
++# LineageOS checks ro.lineage.version here; the Infinity fork renamed it and
++# nothing sets it, which silently disabled addon.d backup -> sideloaded GApps
++# were dropped on every OTA).
++ro.infinity.aversion=17
 diff --git a/resource-overlay/device/Frameworks/res/values/config.xml b/resource-overlay/device/Frameworks/res/values/config.xml
 index 6f18a5d..79fbe1e 100644
 --- a/resource-overlay/device/Frameworks/res/values/config.xml
