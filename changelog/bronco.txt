@@ -6,4 +6,5 @@ Build 2026-10-22  UNOFFICIAL
   - outdoor High Brightness Mode is no longer dropped when a fingerprint scan ends (it used to dim right after unlocking),
   - a scan in flight when the screen turns off no longer leaves the sensor area lit after waking.
 - High Brightness Mode now survives sleep without the black-screen wedge.
+- Google Apps and other add-ons installed through recovery (MindTheGapps) now survive an in-system update: the A/B add-on backup/restore gate was never enabled on this ROM.
 - No other user-visible change: everything from 21.10 stays (red ThinkKey on the lock screen and with the screen off, USB-C role switching, true 514-nit SDR brightness curve, Infinity X upstream as of 20.10).
