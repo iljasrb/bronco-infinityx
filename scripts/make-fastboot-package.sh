@@ -61,8 +61,9 @@ rm -f "$out"
 ( cd "$tmp/pkg" && mkzip "$out" avb_custom_key.img image-bronco.zip )
 
 ls -l "$out"
-sha256sum "$out"
+sha256=$(sha256sum "$out" | cut -d' ' -f1)
+echo "$sha256  $out"
 echo
 echo "browser manifest entry:"
 printf '  "rom": { "url": "/bronco/latest/%s", "sha256": "%s" }\n' \
-    "$(basename "$out")" "$(sha256sum "$out" | cut -d' ' -f1)"
+    "$(basename "$out")" "$sha256"

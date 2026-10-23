@@ -89,7 +89,7 @@ else
         "$zip" "$imgs" "$rec" "${extra[@]/#/$prod/}" "$tmp/MD5SUMS" "$tmp/SHA256SUMS" "$host:$stage/"
 
     echo "2/4 verify what landed"
-    for f in "$(basename "$zip")" "additional_images-$tag.zip" recovery.img "${extra[@]}"; do
+    for f in "${sums[@]}"; do
         local_size=$(stat -c %s "$prod/$f")
         if [ "$dry" = 1 ]; then
             printf '  would: check %s is %s bytes on the server\n' "$f" "$local_size"

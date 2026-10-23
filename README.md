@@ -11,8 +11,9 @@ scripts/measure-bars.sh   exact status bar / QS layout rects per screen state
 scripts/publish.sh        upload a build to rom.flac.moe, rewrite bronco.json, push the feed
 ```
 
-- `patches/` — one patch per repo; `build.sh` re-applies them idempotently after every
-  `repo sync`, so upstream drift cannot silently undo a fix.
+- `patches/` — one patch per repo; the list is `scripts/patches.txt`, and `build.sh`
+  re-applies them idempotently after every `repo sync`, so upstream drift cannot
+  silently undo a fix.
 - `bronco.xml` — `repo` local manifest (copied into `.repo/local_manifests/`).
 - `bronco.json` + `changelog/bronco.txt` — what the in-ROM Updater fetches.
 - `docs/` — local notes (gitignored), entry point `../AGENTS.md`.

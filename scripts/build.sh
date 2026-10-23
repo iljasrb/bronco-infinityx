@@ -12,16 +12,10 @@ bronco=device/motorola/bronco
 
 cd "$root" || exit 1
 
-# Local patches, one per repo. Re-applied after every repo sync.
-# spec: repo:patch-name:file-the-patch-creates (a stale copy is moved aside first)
-PATCHES=(
-    "frameworks/base:frameworks-base:"
-    "packages/apps/Settings:apps-settings:"
-    "packages/apps/Updater:apps-updater:"
-    "device/motorola/bronco:device-bronco:infinity_bronco.mk"
-    "device/motorola/sm8475-common:device-sm8475-common:sepolicy/vendor/genfs_contexts"
-    "kernel/motorola/sm8475-modules:kernel-sm8475-modules:"
-)
+# Local patches, one per repo. Re-applied after every repo sync. The list lives in
+# scripts/patches.txt (shared with make-patches.sh); a stale copy of a file the patch
+# creates is moved aside first.
+mapfile -t PATCHES < <(grep -v '^#' "$infra/scripts/patches.txt" | grep .)
 
 is_applied() { git -C "$1" apply --reverse --check "$2" 2>/dev/null; }
 

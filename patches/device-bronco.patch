@@ -9,13 +9,13 @@ index 2b513ea..6f7a317 100644
 -    $(LOCAL_DIR)/lineage_bronco.mk
 +    $(LOCAL_DIR)/infinity_bronco.mk
 diff --git a/lineage_bronco.mk b/infinity_bronco.mk
-similarity index 77%
+similarity index 85%
 rename from lineage_bronco.mk
 rename to infinity_bronco.mk
-index b8009d6..8053b75 100644
+index b8009d6..74857a5 100644
 --- a/lineage_bronco.mk
 +++ b/infinity_bronco.mk
-@@ -22,10 +22,16 @@ $(call inherit-product, $(SRC_TARGET_DIR)/product/full_base_telephony.mk)
+@@ -22,10 +22,13 @@ $(call inherit-product, $(SRC_TARGET_DIR)/product/full_base_telephony.mk)
  # Inherit from bronco device
  $(call inherit-product, device/motorola/bronco/device.mk)
  
@@ -25,9 +25,6 @@ index b8009d6..8053b75 100644
  # Inherit some common Lineage stuff.
 -$(call inherit-product, vendor/lineage/config/common_full_phone.mk)
 +$(call inherit-product, vendor/infinity/config/common_full_phone.mk)
-+
-+# Debuggable builds are not possible on this ROM, so there is no push-based
-+# iteration loop: see the note in scripts/build.sh and the section in ISSUES.md.
  
 -PRODUCT_NAME := lineage_bronco
 +PRODUCT_NAME := infinity_bronco
@@ -160,18 +157,6 @@ index 6f18a5d..79fbe1e 100644
      <!-- Whether to enable fp unlock when screen turns off on udfps devices -->
      <bool name="config_screen_off_udfps_enabled">true</bool>
 +    <integer name="config_defaultRefreshRateInZone">144</integer>
- </resources>
-diff --git a/resource-overlay/device/SystemUI/res/values-land/dimens.xml b/resource-overlay/device/SystemUI/res/values-land/dimens.xml
-index 64034e9..40b59ec 100644
---- a/resource-overlay/device/SystemUI/res/values-land/dimens.xml
-+++ b/resource-overlay/device/SystemUI/res/values-land/dimens.xml
-@@ -7,6 +7,7 @@
-     <!-- the padding on the start of the statusbar -->
-     <dimen name="status_bar_padding_start">8dp</dimen>
- 
-+    <!-- no status_bar_padding_end here: the fixed inset already exceeds the 8dp start gap -->
-     <!-- the padding on the top of the statusbar (usually 0) -->
-     <dimen name="status_bar_padding_top">0dp</dimen>
  </resources>
 diff --git a/resource-overlay/device/SystemUI/res/values/dimens.xml b/resource-overlay/device/SystemUI/res/values/dimens.xml
 index 667c4ca..34a737b 100644

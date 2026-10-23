@@ -27,11 +27,13 @@ ink() {  # $1 = state tag -> one line with both gaps in px and dp
     local lx lw rx rw right
     read -r lx lw < <(box "/tmp/mb-$1.png" "300x120+0+0")
     read -r rx rw < <(box "/tmp/mb-$1.png" "300x120+780+0")
-    right=$((780 + rx + rw)); RIGHT=$right
+    right=$((780 + rx + rw))
     LC_ALL=C printf '%-9s ink  left=%3spx gap (%4.1fdp)   right=%4spx gap (%4.1fdp)\n' \
-        "$1" "$lx" "$(echo "$lx/$PXDP" | bc -l)" \
-        "$right" "$(echo "$((W - right))/$PXDP" | bc -l)"
+        "$1" "$lx" "$(dp "$lx")" \
+        "$right" "$(dp "$((W - right))")"
 }
+
+dp() { awk -v px="$1" -v d="$PXDP" 'BEGIN{printf "%.1f", px/d}'; }
 
 box() {  # img crop -> "x width" of the ink inside the crop
     magick "$1" -crop "$2" +repage -colorspace gray -threshold 60% -trim info: 2>/dev/null |
@@ -40,7 +42,7 @@ box() {  # img crop -> "x width" of the ink inside the crop
 
 dotrow() {  # privacy dot: green-pixel run in the corner, and the battery to its left
     local img=${1:-/tmp/mb-dot.png} dot dl dr bx bw bri gap
-    dot=$(magick "$img" -crop 1080x44+0+38 +repage -depth 8 txt:- 2>/dev/null | python3 -c '
+    dot=$(magick "$img" -crop ${W}x44+0+38 +repage -depth 8 txt:- 2>/dev/null | python3 -c '
 import re, sys
 cols = set()
 for line in sys.stdin:
@@ -71,7 +73,7 @@ print(*runs[-1]) if runs else print("")
     bri=$((bx + bw))
     gap=$((dl - bri - 1))
     LC_ALL=C printf '  dot       dot=%s..%spx   battery right=%spx   gap=%spx (%4.1fdp)   dot right margin=%spx\n' \
-        "$dl" "$dr" "$bri" "$gap" "$(echo "$gap/2.5" | bc -l)" "$((1080 - dr - 1))"
+        "$dl" "$dr" "$bri" "$gap" "$(dp "$gap")" "$((W - dr - 1))"
 }
 
 rects() {
