@@ -57,6 +57,7 @@ name=$(basename "$zip")
 tag=$(grep -oE '[0-9]{2}\.[0-9]{2}\.[0-9]{4}' <<<"$name" | head -1)   # release date
 imgs=$prod/additional_images-$tag.zip
 rec=$prod/recovery.img
+fb=$prod/bronco-fastboot-$tag.zip      # optional: browser-flashable package
 for f in "$zip" "$imgs" "$rec"; do
     [ -f "$f" ] || { echo "missing artifact: $f" >&2; exit 1; }
 done
@@ -71,8 +72,11 @@ echo "  tag $tag   $size bytes   md5 $md5   build date $build_date"
 
 # checksums next to the zip, as the release page has always had them
 tmp=$(mktemp -d); trap 'rm -rf "$tmp"' EXIT
-( cd "$prod" && md5sum "$name" "additional_images-$tag.zip" recovery.img > "$tmp/MD5SUMS" )
-( cd "$prod" && sha256sum "$name" "additional_images-$tag.zip" recovery.img > "$tmp/SHA256SUMS" )
+extra=()
+[ -f "$fb" ] && extra=("$(basename "$fb")")
+sums=("$name" "additional_images-$tag.zip" recovery.img "${extra[@]}")
+( cd "$prod" && md5sum "${sums[@]}" > "$tmp/MD5SUMS" )
+( cd "$prod" && sha256sum "${sums[@]}" > "$tmp/SHA256SUMS" )
 
 if [ "$feed_only" = 1 ]; then
     echo "feed-only: skipping upload and swap"
@@ -82,10 +86,10 @@ else
     rsync_opts=(-ah --partial)
     [ -t 1 ] && rsync_opts+=(--info=progress2)   # progress spam only on a terminal
     run rsync "${rsync_opts[@]}" \
-        "$zip" "$imgs" "$rec" "$tmp/MD5SUMS" "$tmp/SHA256SUMS" "$host:$stage/"
+        "$zip" "$imgs" "$rec" "${extra[@]/#/$prod/}" "$tmp/MD5SUMS" "$tmp/SHA256SUMS" "$host:$stage/"
 
     echo "2/4 verify what landed"
-    for f in "$(basename "$zip")" "additional_images-$tag.zip" recovery.img; do
+    for f in "$(basename "$zip")" "additional_images-$tag.zip" recovery.img "${extra[@]}"; do
         local_size=$(stat -c %s "$prod/$f")
         if [ "$dry" = 1 ]; then
             printf '  would: check %s is %s bytes on the server\n' "$f" "$local_size"

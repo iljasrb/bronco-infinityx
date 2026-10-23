@@ -102,4 +102,9 @@ if [ -n "$zipfile" ]; then
     echo "artifacts:"
     ( cd "$prod" && ls -la "additional_images-$tag.zip" | awk '{printf "  %s  %.1f MB\n", $9, $5/1048576}' \
       && md5sum "additional_images-$tag.zip" && sha256sum "additional_images-$tag.zip" )
+    # Browser-flashable package (web flasher): +1-2 min, opt-in.
+    if [ "${FASTBOOT_PACKAGE:-0}" = 1 ]; then
+        "$root/scripts/make-fastboot-package.sh" "$tag" || {
+            echo "packaging the fastboot package failed" >&2; exit 1; }
+    fi
 fi
