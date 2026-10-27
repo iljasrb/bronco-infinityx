@@ -78,6 +78,19 @@ sums=("$name" "additional_images-$tag.zip" recovery.img "${extra[@]}")
 ( cd "$prod" && md5sum "${sums[@]}" > "$tmp/MD5SUMS" )
 ( cd "$prod" && sha256sum "${sums[@]}" > "$tmp/SHA256SUMS" )
 
+# The web flasher points at this file instead of at a versioned zip, so a new build never needs
+# a config edit there: url, size and sha256 of both artifacts are read from latest/ itself.
+imgs_name=$(basename "$imgs")
+ota_ver=$(sed -n 's/.*Project_Infinity-X-\([0-9.]*\)-.*/\1/p' <<<"$name")
+sha_of() { awk -v name="$1" '$2 == name { print $1 }' "$tmp/SHA256SUMS"; }
+cat > "$tmp/latest.json" <<EOF
+{
+  "build": "Project Infinity X $ota_ver · $tag",
+  "ota": { "url": "$url", "size": $size, "sha256": "$(sha_of "$name")" },
+  "images": { "url": "$baseurl/latest/$imgs_name", "size": $(stat -c %s "$imgs"), "sha256": "$(sha_of "$imgs_name")" }
+}
+EOF
+
 if [ "$feed_only" = 1 ]; then
     echo "feed-only: skipping upload and swap"
 else
@@ -86,7 +99,7 @@ else
     rsync_opts=(-ah --partial)
     [ -t 1 ] && rsync_opts+=(--info=progress2)   # progress spam only on a terminal
     run rsync "${rsync_opts[@]}" \
-        "$zip" "$imgs" "$rec" "${extra[@]/#/$prod/}" "$tmp/MD5SUMS" "$tmp/SHA256SUMS" "$host:$stage/"
+        "$zip" "$imgs" "$rec" "${extra[@]/#/$prod/}" "$tmp/MD5SUMS" "$tmp/SHA256SUMS" "$tmp/latest.json" "$host:$stage/"
 
     echo "2/4 verify what landed"
     for f in "${sums[@]}"; do
