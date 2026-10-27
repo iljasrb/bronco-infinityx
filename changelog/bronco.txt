@@ -1,4 +1,8 @@
 Project Infinity X 4.1 (Android 17) for the Motorola ThinkPhone
+Build 2026-10-27  UNOFFICIAL
+
+- 27.10.2026 - Updated to latest Infinity X upstream and upload new images.
+
 Build 2026-10-22  UNOFFICIAL
 
 - Fixed the fingerprint / outdoor-mode problems from the tester report (display driver):
