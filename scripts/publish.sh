@@ -2,14 +2,13 @@
 # Publish the newest build to rom.flac.moe and update the OTA feed.
 #
 #   scripts/publish.sh --dry-run              # default: print, change nothing
-#   scripts/publish.sh                        # latest/ replaced, previous kept in archive/
-#   scripts/publish.sh --purge                # drop the old builds, keep only the new one
-#   scripts/publish.sh --purge --no-push      # ... without touching the git feed
+#   scripts/publish.sh                        # latest/ replaced, old build deleted
+#   scripts/publish.sh --no-push              # upload only, leave the git feed alone
 #   scripts/publish.sh --yes --feed-only      # repair bronco.json only (no upload)
 #
-# The upload always goes to a staging directory first. Only after every file is on the
-# server and its size checked does the script touch latest/ (and archive/), so a failed
-# or interrupted upload leaves the published build intact.
+# Only one build is kept: the upload lands in a staging directory, its size is checked, and
+# only then is latest/ replaced — so a failed or interrupted upload leaves the published
+# build intact.
 #
 # Server details are not in this file: this repo is public. They come from
 # infinity/.env.publish (gitignored) or the environment:
@@ -32,15 +31,14 @@ site=${PUBLISH_ROOT:?publish: set PUBLISH_ROOT (see infinity/.env.publish)}
 baseurl=${PUBLISH_URL:-https://rom.flac.moe/bronco}
 stage=$site/_staging
 
-dry=1 purge=0 push=1 feed_only=0
+dry=1 push=1 feed_only=0
 for a in "$@"; do
     case $a in
         --dry-run) dry=1 ;;
         --yes|-y) dry=0 ;;
-        --purge)  purge=1 ;;
         --no-push) push=0 ;;
         --feed-only) feed_only=1 ;;
-        *) echo "usage: $0 [--yes] [--purge] [--no-push] [--feed-only] [--dry-run]" >&2; exit 2 ;;
+        *) echo "usage: $0 [--yes] [--no-push] [--feed-only] [--dry-run]" >&2; exit 2 ;;
     esac
 done
 
@@ -114,14 +112,8 @@ else
         echo "  ok $f ($local_size bytes)"
     done
 
-    echo "3/4 swap into place$( [ "$purge" = 1 ] && echo ' (purge: old builds deleted)')"
-    if [ "$purge" = 1 ]; then
-        rsh "rm -rf $site/archive $site/latest && mv $stage $site/latest"
-    else
-        rsh "mkdir -p $site/archive && rm -rf $site/archive/$tag &&
-             { [ -d $site/latest ] && mv $site/latest $site/archive/$tag || true; } &&
-             mv $stage $site/latest"
-    fi
+    echo "3/4 swap into place"
+    rsh "rm -rf $site/latest && mv $stage $site/latest"
 
     echo "4/4 verify the served file"
     if [ "$dry" = 0 ]; then
