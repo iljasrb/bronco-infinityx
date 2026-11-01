@@ -51,7 +51,7 @@ index 0f482b19e..9172a8411 100644
      <dimen name="controls_panel_corner_radius">40dp</dimen>
  
 diff --git a/packages/SystemUI/res/values/dimens.xml b/packages/SystemUI/res/values/dimens.xml
-index b8281d1e1..d18c32e6a 100644
+index 1113b0890..7c1d74c9b 100644
 --- a/packages/SystemUI/res/values/dimens.xml
 +++ b/packages/SystemUI/res/values/dimens.xml
 @@ -717,10 +717,9 @@
@@ -150,13 +150,13 @@ index 6d7a40501..44eafddff 100644
          private void updateRefreshRateSettingLocked(float minRefreshRate, float peakRefreshRate,
                  float defaultRefreshRate, int displayId) {
 diff --git a/services/core/java/com/android/server/policy/PhoneWindowManager.java b/services/core/java/com/android/server/policy/PhoneWindowManager.java
-index 11f04eef0..02bb9ff67 100644
+index f90a868df..b34f43121 100644
 --- a/services/core/java/com/android/server/policy/PhoneWindowManager.java
 +++ b/services/core/java/com/android/server/policy/PhoneWindowManager.java
-@@ -2422,6 +2422,13 @@ public class PhoneWindowManager implements WindowManagerPolicy {
-             case NOTHING:
+@@ -2424,6 +2424,13 @@ public class PhoneWindowManager implements WindowManagerPolicy {
                  return false;
              case PLAY_PAUSE_MUSIC:
+             case CYCLE_RINGER_MODE:
 +            case TORCH:
 +                return true;
 +            case SEARCH:
@@ -167,7 +167,7 @@ index 11f04eef0..02bb9ff67 100644
                  return true;
              case LAUNCH_CAMERA:
              case SLEEP:
-@@ -2429,7 +2436,11 @@ public class PhoneWindowManager implements WindowManagerPolicy {
+@@ -2431,7 +2438,11 @@ public class PhoneWindowManager implements WindowManagerPolicy {
              case PARTIAL_SCREENSHOT:
                  return isScreenOn();
              default:
@@ -180,7 +180,7 @@ index 11f04eef0..02bb9ff67 100644
          }
      }
  
-@@ -5842,7 +5853,12 @@ public class PhoneWindowManager implements WindowManagerPolicy {
+@@ -5876,7 +5887,12 @@ public class PhoneWindowManager implements WindowManagerPolicy {
                          }
                      }
                  }
