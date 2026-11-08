@@ -1,4 +1,4 @@
-# bronco — Project Infinity X 4.1 for the Motorola ThinkPhone
+# bronco — Project Infinity X 4.2 for the Motorola ThinkPhone
 
 Build scripts, `repo` manifest, patches and OTA feed for this device.
 

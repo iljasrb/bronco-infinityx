@@ -1,8 +1,8 @@
 diff --git a/packages/SystemUI/res/layout/keyguard_status_bar.xml b/packages/SystemUI/res/layout/keyguard_status_bar.xml
-index 1942a70b3..de768c1a5 100644
+index befd94704..c86da4e3c 100644
 --- a/packages/SystemUI/res/layout/keyguard_status_bar.xml
 +++ b/packages/SystemUI/res/layout/keyguard_status_bar.xml
-@@ -30,7 +30,7 @@
+@@ -32,7 +32,7 @@
          android:layout_width="wrap_content"
          android:layout_height="match_parent"
          android:layout_marginStart="@dimen/system_icons_super_container_margin_start"
@@ -11,7 +11,7 @@ index 1942a70b3..de768c1a5 100644
          android:layout_alignParentEnd="true"
          android:gravity="center_vertical|end" >
  
-@@ -79,11 +79,11 @@
+@@ -81,11 +81,11 @@
          android:id="@+id/keyguard_carrier_text"
          android:layout_width="match_parent"
          android:layout_height="match_parent"
@@ -69,10 +69,10 @@ index 1113b0890..7c1d74c9b 100644
      <!-- Most of the time it should be the same as notification_shade_content_margin_horizontal as
           it's vertically aligned with notifications. The exception is split shade when this value
 diff --git a/packages/SystemUI/src/com/android/systemui/statusbar/phone/KeyguardStatusBarView.java b/packages/SystemUI/src/com/android/systemui/statusbar/phone/KeyguardStatusBarView.java
-index fdc338244..c9bae5c41 100644
+index 4e5871943..37924e7a7 100644
 --- a/packages/SystemUI/src/com/android/systemui/statusbar/phone/KeyguardStatusBarView.java
 +++ b/packages/SystemUI/src/com/android/systemui/statusbar/phone/KeyguardStatusBarView.java
-@@ -246,7 +246,7 @@ public class KeyguardStatusBarView extends RelativeLayout {
+@@ -250,7 +250,7 @@ public class KeyguardStatusBarView extends RelativeLayout {
  
          // mCarrierLabel
          mCarrierLabel.setPaddingRelative(
@@ -81,15 +81,15 @@ index fdc338244..c9bae5c41 100644
                  getResources().getDimensionPixelSize(R.dimen.status_bar_padding_top) + mStatusBarExtraPaddingTop,
                  mCarrierLabel.getPaddingEnd(),
                  mCarrierLabel.getPaddingBottom()
-@@ -348,7 +348,7 @@ public class KeyguardStatusBarView extends RelativeLayout {
+@@ -352,7 +352,7 @@ public class KeyguardStatusBarView extends RelativeLayout {
          final int minRight = (!isLayoutRtl() && mIsPrivacyDotEnabled)
                  ? Math.max(mMinDotWidth, mPadding.right) : mPadding.right;
  
 -        int top = waterfallTop + mPadding.top;
 +        int top = waterfallTop;
+         setClipToPadding(false);
+         setClipChildren(false);
          setPadding(minLeft, top, minRight, 0);
-     }
- 
 diff --git a/services/core/java/com/android/server/display/mode/DisplayModeDirector.java b/services/core/java/com/android/server/display/mode/DisplayModeDirector.java
 index 6d7a40501..44eafddff 100644
 --- a/services/core/java/com/android/server/display/mode/DisplayModeDirector.java

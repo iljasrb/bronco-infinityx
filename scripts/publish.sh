@@ -53,6 +53,11 @@ zip=$(ls -t "$prod"/Project_Infinity-X-*-VANILLA-UNOFFICIAL.zip 2>/dev/null | he
 [ -n "$zip" ] || { echo "no OTA zip in $prod" >&2; exit 1; }
 name=$(basename "$zip")
 tag=$(grep -oE '[0-9]{2}\.[0-9]{2}\.[0-9]{4}' <<<"$name" | head -1)   # release date
+# Project_Infinity-X-<rom version>-<device>-<date>-VANILLA-<type>.zip — read the ROM
+# version out of the artifact instead of hardcoding it, so a vendor/infinity bump
+# (4.1 -> 4.2 -> ...) does not silently publish a wrong feed version.
+romver=$(sed -n 's/^Project_Infinity-X-\([^-]*\)-.*/\1/p' <<<"$name")
+[ -n "$romver" ] || { echo "cannot parse the ROM version from $name" >&2; exit 1; }
 imgs=$prod/additional_images-$tag.zip
 rec=$prod/recovery.img
 fb=$prod/bronco-fastboot-$tag.zip      # optional: browser-flashable package
@@ -66,7 +71,7 @@ url=$baseurl/latest/$name
 md5=$(md5sum "$zip" | cut -d' ' -f1)
 size=$(stat -c %s "$zip")
 echo "publishing $name"
-echo "  tag $tag   $size bytes   md5 $md5   build date $build_date"
+echo "  tag $tag   ROM $romver   $size bytes   md5 $md5   build date $build_date"
 
 # checksums next to the zip, as the release page has always had them
 tmp=$(mktemp -d); trap 'rm -rf "$tmp"' EXIT
@@ -130,11 +135,11 @@ fi  # end feed_only guard
 if [ "$dry" = 1 ]; then
     echo "  would: rewrite bronco.json for $name"
 else
-    python3 - "$infra/bronco.json" "$name" "$url" "$size" "$md5" "$build_date" <<'PY'
+    python3 - "$infra/bronco.json" "$name" "$url" "$size" "$md5" "$build_date" "$romver" <<'PY'
 import json, sys
-feed, name, url, size, md5, build_date = sys.argv[1:7]
+feed, name, url, size, md5, build_date, romver = sys.argv[1:8]
 json.dump({"response": [{"filename": name, "download": url, "size": int(size),
-                         "timestamp": int(build_date), "version": "4.1", "md5": md5}]},
+                         "timestamp": int(build_date), "version": romver, "md5": md5}]},
           open(feed, "w"), indent=2)
 open(feed, "a").write("\n")
 PY
