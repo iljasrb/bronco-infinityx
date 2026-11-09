@@ -8,6 +8,22 @@ index 2b513ea..6f7a317 100644
  PRODUCT_MAKEFILES := \
 -    $(LOCAL_DIR)/lineage_bronco.mk
 +    $(LOCAL_DIR)/infinity_bronco.mk
+diff --git a/device.mk b/device.mk
+index d8f8195..18f9781 100644
+--- a/device.mk
++++ b/device.mk
+@@ -29,6 +29,11 @@ PRODUCT_AAPT_PREBUILT_DPI := xxxhdpi xxhdpi xhdpi hdpi
+ BOARD_SHIPPING_API_LEVEL := 31
+ PRODUCT_SHIPPING_API_LEVEL := 33
+ 
++# bronco's real KMI is android12-5.10, so libvintf reads the kernel as FCM
++# level 6 while the Android 17 matrix only has level 7+ entries. Skip the
++# build-time kernel check; the vendor/framework manifest check still runs.
++PRODUCT_OTA_ENFORCE_VINTF_KERNEL_REQUIREMENTS := false
++
+ # Inherit from motorola sm8475-common
+ $(call inherit-product, device/motorola/sm8475-common/sm8475.mk)
+ 
 diff --git a/lineage_bronco.mk b/infinity_bronco.mk
 similarity index 85%
 rename from lineage_bronco.mk
@@ -47,7 +63,7 @@ index aafd899..150450f 100644
 +# were dropped on every OTA).
 +ro.infinity.aversion=17
 diff --git a/resource-overlay/device/Frameworks/res/values/config.xml b/resource-overlay/device/Frameworks/res/values/config.xml
-index 6f18a5d..79fbe1e 100644
+index 6f18a5d..6ced1af 100644
 --- a/resource-overlay/device/Frameworks/res/values/config.xml
 +++ b/resource-overlay/device/Frameworks/res/values/config.xml
 @@ -98,20 +98,20 @@
@@ -135,6 +151,15 @@ index 6f18a5d..79fbe1e 100644
  
      <!-- Type of the double tap sensor. Empty if double tap is not supported. -->
      <string name="config_dozeDoubleTapSensorType" translatable="false">org.lineageos.sensor.double_tap</string>
+@@ -183,7 +186,7 @@
+     <!-- Control whether the always on display mode is available. This should only be enabled on
+          devices where the display has been tuned to be power efficient in DOZE and/or DOZE_SUSPEND
+          states. -->
+-    <bool name="config_dozeAlwaysOnDisplayAvailable">true</bool>
++    <bool name="config_dozeAlwaysOnDisplayAvailable">false</bool>
+ 
+     <!-- Control whether the always on display mode is enabled by default. This value will be used
+          during initialization when the setting is still null. -->
 @@ -284,14 +287,12 @@
           the brightness value is negative, only the lux threshold is applied. -->
      <!-- Low zone brightness thresholds in the range [0, 255] -->

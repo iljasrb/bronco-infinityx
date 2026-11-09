@@ -1,0 +1,12 @@
+diff --git a/arch/arm64/configs/vendor/ext_config/moto-waipio-bronco.config b/arch/arm64/configs/vendor/ext_config/moto-waipio-bronco.config
+index 7b4177027..76ea9414e 100644
+--- a/arch/arm64/configs/vendor/ext_config/moto-waipio-bronco.config
++++ b/arch/arm64/configs/vendor/ext_config/moto-waipio-bronco.config
+@@ -9,3 +9,7 @@ CONFIG_UFSFEATURE=y
+ CONFIG_UFSHID=y
+ CONFIG_UFSSID=y
+ CONFIG_MICRON_UFSHID=y
++
++# bronco: the kernel's actual KMI is android12-5.10; LineageOS's waipio config
++# advertises android13-0, which makes KMI-aware managers pick the wrong module.
++CONFIG_LOCALVERSION="-android12-0"
