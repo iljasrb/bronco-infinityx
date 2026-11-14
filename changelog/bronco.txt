@@ -1,5 +1,7 @@
 Project Infinity X 4.2 (Android 17) for the Motorola ThinkPhone
-Build 2026-11-08  UNOFFICIAL
+Build 2026-11-14  UNOFFICIAL
+
+- 14.11.2026 - Rebuilt from the current Infinity X 4.2 sources (upstream of 13.11.2026) and refreshed the images.
 
 - 08.11.2026 - Updated to Infinity X 4.2 (upstream of 05.11.2026), platform security patch 2026-11-01. Kernel moved to 5.10.272; it still advertises the android12-5.10 KMI, so module matching is unchanged.
 
